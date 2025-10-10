@@ -14,7 +14,7 @@ jobs:
     strategy:
       matrix:
         os: [macOS-latest, windows-latest, ubuntu-latest]
-        node: [16]
+        node: [20]
       fail-fast: false
 
     steps:
@@ -51,7 +51,7 @@ jobs:
 
     # Archiving integration tests artifacts
     - name: Upload test artifacts
-      uses: actions/upload-artifact@v2
+      uses: actions/upload-artifact@v4
       if: failure() && runner.os == 'Linux'
       with: 
         name: artifacts-${{ matrix.os }}
