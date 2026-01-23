@@ -1,5 +1,5 @@
 import { JobProgress } from '../jobprogress';
-import { RSPClient } from 'rsp-client';
+import { Protocol, RSPClient } from 'rsp-client';
 import * as vscode from 'vscode';
 import { ServerInfo } from 'vscode-server-connector-api';
 
@@ -43,6 +43,29 @@ export async function initClient(serverInfo: ServerInfo): Promise<RSPClient> {
             } 
         });
     JobProgress.create(client);
+
+    const toWorkspaceFolder = (folder: vscode.WorkspaceFolder): Protocol.WorkspaceFolder => ({
+        uri: folder.uri.toString(),
+        name: folder.name,
+    });
+
+    const sendWorkspaceFolders = (added: ReadonlyArray<vscode.WorkspaceFolder>, removed: ReadonlyArray<vscode.WorkspaceFolder>) => {
+        const params: Protocol.DidChangeWorkspaceFoldersParams = {
+            event: {
+                added: added.map(toWorkspaceFolder),
+                removed: removed.map(toWorkspaceFolder),
+            },
+        };
+        client.getOutgoingHandler().didChangeWorkspaceFolders(params);
+    };
+
+    const initialFolders = vscode.workspace.workspaceFolders || [];
+    sendWorkspaceFolders(initialFolders, []);
+
+    const workspaceListener = vscode.workspace.onDidChangeWorkspaceFolders(event => {
+        sendWorkspaceFolders(event.added, event.removed);
+    });
+    client.onConnectionClosed(() => workspaceListener.dispose());
 
     return client;
 }

@@ -9,4 +9,4 @@ felix-cache/
 test-resources/
 *.tgz
 path
-.nyc_output/
+.DS_Store

@@ -1,17 +1,17 @@
 {
-	"name": "vscode-rsp-ui",
-	"displayName": "Runtime Server Protocol UI",
+	"name": "cabutchei-rsp-ui",
+	"displayName": "Runtime Server Protocol UI - WTP edition",
 	"description": "Provides a unified UI to interact with runtimes and servers managed over the RSP protocol.",
 	"version": "0.24.12",
 	"license": "SEE LICENSE IN LICENSE",
-	"publisher": "redhat",
-	"author": "Red Hat",
+	"publisher": "cabutchei",
+	"author": "cabutchei",
 	"preview": true,
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/redhat-developer/vscode-rsp-ui.git"
+		"url": "https://github.com/cabutchei/vscode-rsp-ui.git"
 	},
-	"bugs": "https://github.com/redhat-developer/vscode-rsp-ui/issues/",
+	"bugs": "https://github.com/cabutchei/vscode-rsp-ui/issues",
 	"engines": {
 		"vscode": "^1.54.0"
 	},
@@ -26,289 +26,289 @@
 	],
 	"icon": "images/rsp_ui_icon.png",
 	"activationEvents": [
-		"onCommand:server.createServer",
-		"onCommand:server.addLocation",
-		"onCommand:server.downloadRuntime",
-		"onCommand:server.startRSP",
-		"onCommand:server.disconnectRSP",
-		"onCommand:server.stopRSP",
-		"onCommand:server.terminateRSP",
-		"onCommand:server.start",
-		"onCommand:server.debug",
-		"onCommand:server.stop",
-		"onCommand:server.terminate",
-		"onCommand:server.restart",
-		"onCommand:server.restartDebug",
-		"onCommand:server.remove",
-		"onCommand:server.output",
-		"onCommand:server.add",
-		"onCommand:server.publishFull",
-		"onCommand:server.publishIncremental",
-		"onCommand:server.actions",
-		"onView:servers",
+		"onCommand:dev.server.createServer",
+		"onCommand:dev.server.addLocation",
+		"onCommand:dev.server.downloadRuntime",
+		"onCommand:dev.server.startRSP",
+		"onCommand:dev.server.disconnectRSP",
+		"onCommand:dev.server.stopRSP",
+		"onCommand:dev.server.terminateRSP",
+		"onCommand:dev.server.start",
+		"onCommand:dev.server.debug",
+		"onCommand:dev.server.stop",
+		"onCommand:dev.server.terminate",
+		"onCommand:dev.server.restart",
+		"onCommand:dev.server.restartDebug",
+		"onCommand:dev.server.remove",
+		"onCommand:dev.server.output",
+		"onCommand:dev.server.add",
+		"onCommand:dev.server.publishFull",
+		"onCommand:dev.server.publishIncremental",
+		"onCommand:dev.server.actions",
+		"onView:dev.servers",
 		"onLanguage:plaintext"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
 		"commands": [
 			{
-				"command": "server.createServer",
-				"title": "Create New Server...",
+				"command": "dev.server.createServer",
+				"title": "Dev: Create New Server...",
 				"icon": "resources/dark/new-server.svg",
 				"category": "Servers"
 			},
 			{
-				"command": "server.addLocation",
-				"title": "Add Local Server...",
+				"command": "dev.server.addLocation",
+				"title": "Dev: Add Local Server...",
 				"icon": "resources/dark/add-location.svg",
 				"category": "Servers"
 			},
 			{
-				"command": "server.downloadRuntime",
-				"title": "Download Server...",
+				"command": "dev.server.downloadRuntime",
+				"title": "Dev: Download Server...",
 				"category": "Servers"
 			},
 			{
-				"command": "server.startRSP",
-				"title": "Start / Connect to RSP Provider",
+				"command": "dev.server.startRSP",
+				"title": "Dev: Start / Connect to RSP Provider",
 				"category": "Servers"
 			},
 			{
-				"command": "server.disconnectRSP",
-				"title": "Disconnect from RSP Provider",
+				"command": "dev.server.disconnectRSP",
+				"title": "Dev: Disconnect from RSP Provider",
 				"category": "Servers"
 			},
 			{
-				"command": "server.stopRSP",
-				"title": "Stop RSP Provider",
+				"command": "dev.server.stopRSP",
+				"title": "Dev: Stop RSP Provider",
 				"category": "Servers"
 			},
 			{
-				"command": "server.terminateRSP",
-				"title": "Terminate RSP Provider",
+				"command": "dev.server.terminateRSP",
+				"title": "Dev: Terminate RSP Provider",
 				"category": "Servers"
 			},
 			{
-				"command": "server.start",
-				"title": "Start Server",
+				"command": "dev.server.start",
+				"title": "Dev: Start Server",
 				"category": "Servers"
 			},
 			{
-				"command": "server.debug",
-				"title": "Debug Server",
+				"command": "dev.server.debug",
+				"title": "Dev: Debug Server",
 				"category": "Servers"
 			},
 			{
-				"command": "server.stop",
-				"title": "Stop Server",
+				"command": "dev.server.stop",
+				"title": "Dev: Stop Server",
 				"category": "Servers"
 			},
 			{
-				"command": "server.terminate",
-				"title": "Terminate Server",
+				"command": "dev.server.terminate",
+				"title": "Dev: Terminate Server",
 				"category": "Servers"
 			},
 			{
-				"command": "server.restart",
-				"title": "Restart in Run Mode",
+				"command": "dev.server.restart",
+				"title": "Dev: Restart in Run Mode",
 				"category": "Servers"
 			},
 			{
-				"command": "server.restartDebug",
-				"title": "Restart in Debug Mode",
+				"command": "dev.server.restartDebug",
+				"title": "Dev: Restart in Debug Mode",
 				"category": "Servers"
 			},
 			{
-				"command": "server.remove",
-				"title": "Remove Server",
+				"command": "dev.server.remove",
+				"title": "Dev: Remove Server",
 				"category": "Servers"
 			},
 			{
-				"command": "server.output",
-				"title": "Show Output Channel",
+				"command": "dev.server.output",
+				"title": "Dev: Show Output Channel",
 				"category": "Servers"
 			},
 			{
-				"command": "server.addDeployment",
-				"title": "Add Deployment",
+				"command": "dev.server.addDeployment",
+				"title": "Dev: Add Deployment",
 				"category": "Servers"
 			},
 			{
-				"command": "server.removeDeployment",
-				"title": "Remove Deployment",
+				"command": "dev.server.removeDeployment",
+				"title": "Dev: Remove Deployment",
 				"category": "Servers"
 			},
 			{
-				"command": "server.publishIncremental",
-				"title": "Publish Server (Incremental)",
+				"command": "dev.server.publishIncremental",
+				"title": "Dev: Publish Server (Incremental)",
 				"category": "Servers"
 			},
 			{
-				"command": "server.publishFull",
-				"title": "Publish Server (Full)",
+				"command": "dev.server.publishFull",
+				"title": "Dev: Publish Server (Full)",
 				"category": "Servers"
 			},
 			{
-				"command": "server.actions",
-				"title": "Server Actions...",
+				"command": "dev.server.actions",
+				"title": "Dev: Server Actions...",
 				"category": "Servers"
 			},
 			{
-				"command": "server.editServer",
-				"title": "Edit Server",
+				"command": "dev.server.editServer",
+				"title": "Dev: Edit Server",
 				"category": "Servers"
 			},
 			{
-				"command": "server.application.run",
-				"title": "Run on Server",
+				"command": "dev.server.application.run",
+				"title": "Dev: Run on Server",
 				"category": "Application"
 			},
 			{
-				"command": "server.application.debug",
-				"title": "Debug on Server",
+				"command": "dev.server.application.debug",
+				"title": "Dev: Debug on Server",
 				"category": "Application"
 			}
 		],
 		"views": {
 			"explorer": [
 				{
-					"id": "servers",
-					"name": "Servers"
+					"id": "dev.servers",
+					"name": "Dev Servers"
 				}
 			]
 		},
 		"menus": {
 			"view/title": [
 				{
-					"command": "server.createServer",
-					"when": "view == servers",
+					"command": "dev.server.createServer",
+					"when": "view == dev.servers",
 					"group": "navigation"
 				}
 			],
 			"commandPalette": [
 				{
-					"command": "server.application.run",
+					"command": "dev.server.application.run",
 					"when": "never"
 				},
 				{
-					"command": "server.application.debug",
+					"command": "dev.server.application.debug",
 					"when": "never"
 				}
 			],
 			"view/item/context": [
 				{
-					"command": "server.startRSP",
-					"when": "view == servers && viewItem =~ /^(RSPUnknown|RSPStopped)/",
+					"command": "dev.server.startRSP",
+					"when": "view == dev.servers && viewItem =~ /^(RSPUnknown|RSPStopped)/",
 					"group": "0_server-rspstartstop@1"
 				},
 				{
-					"command": "server.disconnectRSP",
-					"when": "view == servers && viewItem =~ /^(RSPConnected)/",
+					"command": "dev.server.disconnectRSP",
+					"when": "view == dev.servers && viewItem =~ /^(RSPConnected)/",
 					"group": "0_server-rspstartstop@2"
 				},
 				{
-					"command": "server.stopRSP",
-					"when": "view == servers && viewItem =~ /^(RSPStarted|RSPConnected)/",
+					"command": "dev.server.stopRSP",
+					"when": "view == dev.servers && viewItem =~ /^(RSPStarted|RSPConnected)/",
 					"group": "0_server-rspstartstop@2"
 				},
 				{
-					"command": "server.terminateRSP",
-					"when": "view == servers && viewItem =~ /^(RSPStarted|RSPStarting|RSPStopping)/",
+					"command": "dev.server.terminateRSP",
+					"when": "view == dev.servers && viewItem =~ /^(RSPStarted|RSPStarting|RSPStopping)/",
 					"group": "0_server-rspstartstop@2"
 				},
 				{
-					"command": "server.createServer",
-					"when": "view == servers && viewItem =~ /^(RSPStarted|RSPConnected)/",
+					"command": "dev.server.createServer",
+					"when": "view == dev.servers && viewItem =~ /^(RSPStarted|RSPConnected)/",
 					"group": "0_server-rspstartstop@3"
 				},
 				{
-					"command": "server.start",
-					"when": "view == servers && viewItem =~ /^(Stopped|Unknown)/",
+					"command": "dev.server.start",
+					"when": "view == dev.servers && viewItem =~ /^(Stopped|Unknown)/",
 					"group": "1_server-startstop@1"
 				},
 				{
-					"command": "server.debug",
-					"when": "view == servers && viewItem =~ /^Stopped/",
+					"command": "dev.server.debug",
+					"when": "view == dev.servers && viewItem =~ /^Stopped/",
 					"group": "1_server-startstop@2"
 				},
 				{
-					"command": "server.stop",
-					"when": "view == servers && viewItem =~ /^(Started|Debugging|Unknown)/",
+					"command": "dev.server.stop",
+					"when": "view == dev.servers && viewItem =~ /^(Started|Debugging|Unknown)/",
 					"group": "1_server-startstop@3"
 				},
 				{
-					"command": "server.restart",
-					"when": "view == servers && viewItem =~ /^(Started|Debugging)/",
+					"command": "dev.server.restart",
+					"when": "view == dev.servers && viewItem =~ /^(Started|Debugging)/",
 					"group": "1_server-startstop@4"
 				},
 				{
-					"command": "server.restartDebug",
-					"when": "view == servers && viewItem =~ /^(Started|Debugging)/",
+					"command": "dev.server.restartDebug",
+					"when": "view == dev.servers && viewItem =~ /^(Started|Debugging)/",
 					"group": "1_server-startstop@5"
 				},
 				{
-					"command": "server.terminate",
-					"when": "view == servers && viewItem =~ /^(Starting|Stopping|Started|Stopped|Unknown)/",
+					"command": "dev.server.terminate",
+					"when": "view == dev.servers && viewItem =~ /^(Starting|Stopping|Started|Stopped|Unknown)/",
 					"group": "1_server-startstop@6"
 				},
 				{
-					"command": "server.remove",
-					"when": "view == servers && viewItem =~ /^(Stopped|Unknown)/",
+					"command": "dev.server.remove",
+					"when": "view == dev.servers && viewItem =~ /^(Stopped|Unknown)/",
 					"group": "2_server-remove@1"
 				},
 				{
-					"command": "server.publishIncremental",
-					"when": "view == servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"command": "dev.server.publishIncremental",
+					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "3_server-deployments@6"
 				},
 				{
-					"command": "server.publishFull",
-					"when": "view == servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"command": "dev.server.publishFull",
+					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "3_server-deployments@7"
 				},
 				{
-					"command": "server.addDeployment",
-					"when": "view == servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|^Unknown)/",
+					"command": "dev.server.addDeployment",
+					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|^Unknown)/",
 					"group": "3_server-deployments@1"
 				},
 				{
-					"command": "server.removeDeployment",
-					"when": "view == servers && viewItem =~ /^(Synchronized|[+|-|Full]* Publish|Unknown)/",
+					"command": "dev.server.removeDeployment",
+					"when": "view == dev.servers && viewItem =~ /^(Synchronized|[+|-|Full]* Publish|Unknown)/",
 					"group": "3_server-deployments@2"
 				},
 				{
-					"command": "server.output",
-					"when": "view == servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped)/",
+					"command": "dev.server.output",
+					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped)/",
 					"group": "4_server-status@1"
 				},
 				{
-					"command": "server.downloadRuntime",
-					"when": "view == servers && !viewItem",
+					"command": "dev.server.downloadRuntime",
+					"when": "view == dev.servers && !viewItem",
 					"group": "5_rsp@1"
 				},
 				{
-					"command": "server.addLocation",
-					"when": "view == servers && !viewItem",
+					"command": "dev.server.addLocation",
+					"when": "view == dev.servers && !viewItem",
 					"group": "5_rsp@2"
 				},
 				{
-					"command": "server.actions",
-					"when": "view == servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"command": "dev.server.actions",
+					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "6_server-info@1"
 				},
 				{
-					"command": "server.editServer",
-					"when": "view == servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"command": "dev.server.editServer",
+					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "6_server-info@2"
 				}
 			],
 			"explorer/context": [
 				{
-					"command": "server.application.run",
+					"command": "dev.server.application.run",
 					"group": "1_server-application@1"
 				},
 				{
-					"command": "server.application.debug",
+					"command": "dev.server.application.debug",
 					"group": "1_server-application@2"
 				}
 			]
@@ -317,7 +317,7 @@
 			"type": "object",
 			"title": "Servers View",
 			"properties": {
-				"rsp-ui.rsp.java.home": {
+				"dev.rsp-ui.rsp.java.home": {
 					"type": [
 						"string",
 						"null"
@@ -326,29 +326,29 @@
 					"description": "Specifies the path to a full JDK (version 11 or newer) which will be used to launch the Runtime Server Protocol (RSP) Server, as well as be the default java to launch any Java-based runtimes that the RSP will control.\nOn Windows, backslashes must be escaped, i.e.\n\"rsp-ui.rsp.java.home\":\"C:\\\\Program Files\\\\Java\\\\jdk-11.0.13\"",
 					"scope": "window"
 				},
-				"redhat.telemetry.enabled": {
+				"dev.redhat.telemetry.enabled": {
 					"type": "boolean",
 					"default": null,
 					"markdownDescription": "Enable usage data and errors to be sent to Red Hat servers. Read our [privacy statement](https://developers.redhat.com/article/tool-data-collection).",
 					"scope": "window"
 				},
-				"vscodeAdapters.showChannelOnServerOutput": {
+				"dev.vscodeAdapters.showChannelOnServerOutput": {
 					"type": "boolean",
 					"default": true,
 					"description": "Show Server's output channel when new text added to output stream."
 				},
-				"rsp-ui.newServerWebviewWorkflow": {
+				"dev.rsp-ui.newServerWebviewWorkflow": {
 					"type": "boolean",
 					"default": true,
 					"title": "Use webviews when creating a new server",
 					"description": "If true, use the webviews workflow when creating a new server. If false, use a series of prompts."
 				},
-				"rsp-ui.enableAsyncPublish": {
+				"dev.rsp-ui.enableAsyncPublish": {
 					"type": "boolean",
 					"default": false,
 					"description": "Enable asynchronous publishing."
 				},
-				"rsp-ui.enableStartServerOnActivation": {
+				"dev.rsp-ui.enableStartServerOnActivation": {
 					"type": "array",
 					"items": {
 						"type": "object",
