@@ -46,11 +46,11 @@ class RSPProviderAPIImpl implements RSPModel {
         if (startRSP) {
             if(vscode.window.state.focused) {
                 const commandHandler = new CommandHandler(serversExplorer);
-                executeCommandAndLog('server.startRSP', commandHandler.startRSP, commandHandler, rspState, 'Unable to start the RSP server: ');
+                executeCommandAndLog('dev.server.startRSP', commandHandler.startRSP, commandHandler, rspState, 'Unable to start the RSP server: ');
             } else {
                 setTimeout(function() {
                     const commandHandler = new CommandHandler(serversExplorer);
-                    executeCommandAndLog('server.startRSP', commandHandler.startRSP, commandHandler, rspState, 'Unable to start the RSP server: ');
+                    executeCommandAndLog('dev.server.startRSP', commandHandler.startRSP, commandHandler, rspState, 'Unable to start the RSP server: ');
                 }, 3000);
             }
         }
@@ -59,7 +59,7 @@ class RSPProviderAPIImpl implements RSPModel {
     private async updateRSPActivationSetting(rsp: RSPServer, explorer: ServerExplorer): Promise<boolean> {
         let startRSP = true;
         let existingSettings: RSPProviderSetting[] = vscode.workspace.
-            getConfiguration('rsp-ui').
+            getConfiguration('dev.rsp-ui').
             get<[RSPProviderSetting]>('enableStartServerOnActivation');
         // unfortunately it seems that the get method (above) works with some cache because
         // if i try to register two or more providers at once for the first time it always return an empty array,
@@ -87,7 +87,7 @@ class RSPProviderAPIImpl implements RSPModel {
                 startRSP = rspAlreadyRegistered.startOnActivation;
             }
         }
-        await vscode.workspace.getConfiguration('rsp-ui').update('enableStartServerOnActivation', existingSettings, true);
+        await vscode.workspace.getConfiguration('dev.rsp-ui').update('enableStartServerOnActivation', existingSettings, true);
         return startRSP;
     }
 

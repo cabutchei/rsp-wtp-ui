@@ -441,7 +441,7 @@ export class CommandHandler {
             if (!serverId) return null;
             context = this.explorer.getServerStateById(rsp.id, serverId);
         }
-        const isAsync = vscode.workspace.getConfiguration('rsp-ui').get<boolean>('enableAsyncPublish');
+        const isAsync = vscode.workspace.getConfiguration('dev.rsp-ui').get<boolean>('enableAsyncPublish');
 
         const telemetryProps: any = {
             rspType: context.rsp,
@@ -717,7 +717,7 @@ export class CommandHandler {
     public async runOnServerImpl(context:ServerStateNode, uri:vscode.Uri, mode?: string): Promise<void> {
 
         await this.explorer.addDeployment([uri], context);
-        const isAsync = vscode.workspace.getConfiguration('rsp-ui').get<boolean>('enableAsyncPublish');
+        const isAsync = vscode.workspace.getConfiguration('dev.rsp-ui').get<boolean>('enableAsyncPublish');
         await this.explorer.publish(context.rsp, context.server, ServerState.PUBLISH_FULL, isAsync);
         if (context.state === ServerState.STOPPED ||
             context.state === ServerState.UNKNOWN) {

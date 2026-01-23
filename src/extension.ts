@@ -41,56 +41,56 @@ async function registerRecommendations(context: vscode.ExtensionContext) {
 
 async function registerCommands(commandHandler: CommandHandler, context: vscode.ExtensionContext) {
     const newLocal = [
-        vscode.commands.registerCommand('server.startRSP', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.startRSP', context => executeCommand(
             commandHandler.startRSP, commandHandler, context, 'Unable to start the server: ')),
-        vscode.commands.registerCommand('server.disconnectRSP', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.disconnectRSP', context => executeCommand(
             commandHandler.disconnectRSP, commandHandler, context, 'Unable to disconnect the server: ')),
-        vscode.commands.registerCommand('server.stopRSP', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.stopRSP', context => executeCommand(
             commandHandler.stopRSP, commandHandler, false, context, 'Unable to stop the server: ')),
-        vscode.commands.registerCommand('server.terminateRSP', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.terminateRSP', context => executeCommand(
             commandHandler.stopRSP, commandHandler, true, context, 'Unable to start the server: ')),
-        vscode.commands.registerCommand('server.start', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.start', context => executeCommand(
             commandHandler.startServer, commandHandler, 'run', context, 'Unable to start the server: ')),
-        vscode.commands.registerCommand('server.restart', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.restart', context => executeCommand(
             commandHandler.restartServer, commandHandler, 'run', context, 'Unable to restart in run mode the server: ')),
-        vscode.commands.registerCommand('server.debug', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.debug', context => executeCommand(
             commandHandler.debugServer, commandHandler, context, 'Unable to debug the server: ')),
-        vscode.commands.registerCommand('server.restartDebug', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.restartDebug', context => executeCommand(
             commandHandler.restartServer, commandHandler, 'debug', context, 'Unable to restart in debug mode the server: ')),
-        vscode.commands.registerCommand('server.stop', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.stop', context => executeCommand(
             commandHandler.stopServer, commandHandler, false, context, 'Unable to stop the server: ')),
-        vscode.commands.registerCommand('server.terminate', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.terminate', context => executeCommand(
             commandHandler.stopServer, commandHandler, true, context, 'Unable to terminate the server: ')),
-        vscode.commands.registerCommand('server.remove', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.remove', context => executeCommand(
             commandHandler.removeServer, commandHandler, context, 'Unable to remove the server: ')),
-        vscode.commands.registerCommand('server.output', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.output', context => executeCommand(
             commandHandler.showServerOutput, commandHandler, context, 'Unable to show server output channel')),
-        vscode.commands.registerCommand('server.addDeployment', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.addDeployment', context => executeCommand(
             commandHandler.addDeployment, commandHandler, context, 'Unable to add deployment to the server: ')),
-        vscode.commands.registerCommand('server.removeDeployment', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.removeDeployment', context => executeCommand(
             commandHandler.removeDeployment, commandHandler, context, 'Unable to remove deployment from the server: ')),
-        vscode.commands.registerCommand('server.publishFull', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.publishFull', context => executeCommand(
             commandHandler.publishServer, commandHandler, ServerState.PUBLISH_FULL, context, 'Unable to publish (Full) to the server: ')),
-        vscode.commands.registerCommand('server.publishIncremental', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.publishIncremental', context => executeCommand(
             commandHandler.publishServer, commandHandler, ServerState.PUBLISH_INCREMENTAL, context, 'Unable to publish (Incremental) to the server: ')),
-        vscode.commands.registerCommand('server.editServer', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.editServer', context => executeCommand(
             commandHandler.editServer, commandHandler, context, 'Unable to edit server properties')),
-        vscode.commands.registerCommand('server.actions', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.actions', context => executeCommand(
             commandHandler.serverActions, commandHandler, context, 'Unable to execute action')),
-        vscode.commands.registerCommand('server.saveSelectedNode', context => executeCommandAndLog('server.saveSelectedNode',
+        vscode.commands.registerCommand('dev.server.saveSelectedNode', context => executeCommandAndLog('dev.server.saveSelectedNode',
             commandHandler.saveSelectedNode, commandHandler, context)),
-        vscode.commands.registerCommand('server.application.run', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.application.run', context => executeCommand(
             commandHandler.runOnServer, commandHandler, context, 'run', 'Unable to deploy and run application')),
-        vscode.commands.registerCommand('server.application.debug', context => executeCommand(
+        vscode.commands.registerCommand('dev.server.application.debug', context => executeCommand(
             commandHandler.runOnServer, commandHandler, context, 'debug', 'Unable to deploy and debug application')),
 
-        vscode.commands.registerCommand('server.createServer', context => executeCommandAndLog('server.createServer',
+        vscode.commands.registerCommand('dev.server.createServer', context => executeCommandAndLog('dev.server.createServer',
             commandHandler.createServer, commandHandler, context, 'Unable to create the server: ')),
 
         // Do these two still exist? Can't seem to get them to show up
-        vscode.commands.registerCommand('server.addLocation', context => executeCommandAndLog('server.addLocation',
+        vscode.commands.registerCommand('dev.server.addLocation', context => executeCommandAndLog('dev.server.addLocation',
             commandHandler.addLocation, commandHandler, context, 'Unable to detect any server: ')),
-        vscode.commands.registerCommand('server.downloadRuntime', context => executeCommandAndLog('server.downloadRuntime',
+        vscode.commands.registerCommand('dev.server.downloadRuntime', context => executeCommandAndLog('dev.server.downloadRuntime',
             commandHandler.downloadRuntime, commandHandler, context, 'Unable to detect any runtime: ')),
         vscode.workspace.onDidSaveTextDocument(onDidSaveTextDocument),
         vscode.workspace.onDidCloseTextDocument(onDidCloseTextDocument)
