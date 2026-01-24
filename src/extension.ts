@@ -69,6 +69,10 @@ async function registerCommands(commandHandler: CommandHandler, context: vscode.
             commandHandler.addDeployment, commandHandler, context, 'Unable to add deployment to the server: ')),
         vscode.commands.registerCommand('dev.server.removeDeployment', context => executeCommand(
             commandHandler.removeDeployment, commandHandler, context, 'Unable to remove deployment from the server: ')),
+        vscode.commands.registerCommand('dev.server.startModule', context => executeCommand(
+            commandHandler.startModule, commandHandler, context, 'Unable to start module: ')),
+        vscode.commands.registerCommand('dev.server.stopModule', context => executeCommand(
+            commandHandler.stopModule, commandHandler, context, 'Unable to stop module: ')),
         vscode.commands.registerCommand('dev.server.publishFull', context => executeCommand(
             commandHandler.publishServer, commandHandler, ServerState.PUBLISH_FULL, context, 'Unable to publish (Full) to the server: ')),
         vscode.commands.registerCommand('dev.server.publishIncremental', context => executeCommand(

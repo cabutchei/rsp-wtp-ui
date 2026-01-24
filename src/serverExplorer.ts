@@ -133,6 +133,10 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             for (const serverHandle of servers) {
                 const state = await client.getOutgoingHandler().getServerState(serverHandle);
                 const serverNode: ServerStateNode = this.convertToServerStateNode(rspId, state);
+                const moduleNodes = await this.fetchModuleStates(rspId, state.server);
+                if (moduleNodes !== undefined) {
+                    serverNode.moduleStates = moduleNodes;
+                }
                 this.RSPServersStatus.get(rspId).state.serverStates.push(serverNode);
             }
         }
@@ -145,6 +149,10 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         if (client) {
             const state = await client.getOutgoingHandler().getServerState(event);
             const serverNode: ServerStateNode = this.convertToServerStateNode(rspId, state);
+            const moduleNodes = await this.fetchModuleStates(rspId, state.server);
+            if (moduleNodes !== undefined) {
+                serverNode.moduleStates = moduleNodes;
+            }
             if (serverNode) {
                 this.RSPServersStatus.get(rspId).state.serverStates.push(serverNode);
                 this.refresh(this.RSPServersStatus.get(rspId).state);
@@ -169,7 +177,18 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             }
         });
         serverToUpdate.deployableStates = this.convertToDeployableStateNodes(rspId, event.deployableStates);
-        serverToUpdate.moduleStates = this.convertToModuleStateNodes(rspId, event.server, event.moduleStates);
+        if (event.moduleStates != null) {
+            serverToUpdate.moduleStates = this.convertToModuleStateNodes(rspId, event.server, event.moduleStates);
+        } else {
+            this.fetchModuleStates(rspId, event.server).then(moduleNodes => {
+                if (moduleNodes !== undefined) {
+                    serverToUpdate.moduleStates = moduleNodes;
+                    this.refresh(serverToUpdate);
+                }
+            }).catch(() => {
+                // ignore module refresh errors
+            });
+        }
         this.RSPServersStatus.get(rspId).state.serverStates[indexServer] = serverToUpdate;
         this.refresh(serverToUpdate);
         const channel: OutputChannel = this.serverOutputChannels.get(event.server.id);
@@ -181,12 +200,10 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     private convertToServerStateNode(rspId: string, state: Protocol.ServerState): ServerStateNode {
         if (state) {
             const deployableNodes: DeployableStateNode[] = this.convertToDeployableStateNodes(rspId, state.deployableStates);
-            const moduleNodes: ModuleStateNode[] = this.convertToModuleStateNodes(rspId, state.server, state.moduleStates);
             return {
                 ...state,
                 rsp: rspId,
-                deployableStates: deployableNodes,
-                moduleStates: moduleNodes
+                deployableStates: deployableNodes
             } as ServerStateNode;
         }
 
@@ -203,6 +220,20 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         }
 
         return deployableNodes;
+    }
+
+    private async fetchModuleStates(rspId: string, server: Protocol.ServerHandle): Promise<ModuleStateNode[] | undefined> {
+        const client: RSPClient = this.getClientByRSP(rspId);
+        if (!client) {
+            return undefined;
+        }
+        try {
+            const moduleStates = await client.getOutgoingHandler().getModuleStates(server);
+            return this.convertToModuleStateNodes(rspId, server, moduleStates);
+        } catch (err) {
+            void err;
+            return undefined;
+        }
     }
 
     private convertToModuleStateNodes(
@@ -972,7 +1003,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             return { label: `${id1}`,
                 description: `(${serverState}) (${pubState})`,
                 iconPath: icon,
-                contextValue: pubState,
+                contextValue: `Deployable${serverState} ${pubState}`,
                 collapsibleState: modules.length > 0 ? TreeItemCollapsibleState.Collapsed : TreeItemCollapsibleState.None
             };
         } else if (this.isModuleElement(item)) {
@@ -982,11 +1013,12 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             const stateLabel = this.runStateEnum.get(state.state);
             const pubLabel = this.publishStateEnum.get(state.publishState);
             const descriptionParts = [stateLabel, pubLabel].filter(Boolean).map(value => `(${value})`);
+            const contextValue = stateLabel ? `Module${stateLabel}` : 'Module';
             return {
                 label: moduleLabel,
                 description: descriptionParts.join(' '),
                 iconPath: icon,
-                contextValue: 'Module',
+                contextValue,
                 collapsibleState: TreeItemCollapsibleState.None
             };
         }

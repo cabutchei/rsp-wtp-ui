@@ -230,7 +230,7 @@ suite('Server explorer', () => {
             contextValue: 'Stopped',
             iconPath: iconPath,
             command: {
-                command: 'server.saveSelectedNode',
+                command: 'dev.server.saveSelectedNode',
                 title: '',
                 tooltip: '',
                 arguments: [ ProtocolStubs.unknownServerState ]
@@ -245,7 +245,7 @@ suite('Server explorer', () => {
             contextValue: 'Started',
             iconPath: iconPath,
             command: {
-                command: 'server.saveSelectedNode',
+                command: 'dev.server.saveSelectedNode',
                 title: '',
                 tooltip: '',
                 arguments: [ ProtocolStubs.unknownServerState ]
@@ -260,7 +260,7 @@ suite('Server explorer', () => {
             contextValue: 'Debugging',
             iconPath: iconPath,
             command: {
-                command: 'server.saveSelectedNode',
+                command: 'dev.server.saveSelectedNode',
                 title: '',
                 tooltip: '',
                 arguments: [ ProtocolStubs.serverDebuggingState ]
@@ -275,7 +275,7 @@ suite('Server explorer', () => {
             contextValue: 'Unknown',
             iconPath: iconPath,
             command: {
-                command: 'server.saveSelectedNode',
+                command: 'dev.server.saveSelectedNode',
                 title: '',
                 tooltip: '',
                 arguments: [ ProtocolStubs.unknownServerState ]
@@ -796,7 +796,7 @@ suite('Server explorer', () => {
                 contextValue: 'Unknown',
                 collapsibleState: TreeItemCollapsibleState.Expanded,
                 command: {
-                    command: 'server.saveSelectedNode',
+                    command: 'dev.server.saveSelectedNode',
                     title: '',
                     tooltip: '',
                     arguments: [ ProtocolStubs.unknownServerState ]

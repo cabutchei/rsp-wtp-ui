@@ -122,33 +122,33 @@ suite('Extension Tests', () => {
         }        
         return await vscode.commands.getCommands(true).then(commands => {
             const SERVER_COMMANDS = [
-                'server.startRSP',
-                'server.stopRSP',
-                'server.disconnectRSP',
-                'server.terminateRSP',
-                'server.start',
-                'server.restart',
-                'server.debug',
-                'server.restartDebug',
-                'server.stop',
-                'server.terminate',
-                'server.remove',
-                'server.output',
-                'server.addDeployment',
-                'server.removeDeployment',
-                'server.publishFull',
-                'server.publishIncremental',
-                'server.createServer',
-                'server.addLocation',
-                'server.downloadRuntime',
-                'server.actions',
-                'server.editServer',
-                'server.application.run',
-                'server.application.debug',
-                'server.saveSelectedNode'
+                'dev.server.startRSP',
+                'dev.server.stopRSP',
+                'dev.server.disconnectRSP',
+                'dev.server.terminateRSP',
+                'dev.server.start',
+                'dev.server.restart',
+                'dev.server.debug',
+                'dev.server.restartDebug',
+                'dev.server.stop',
+                'dev.server.terminate',
+                'dev.server.remove',
+                'dev.server.output',
+                'dev.server.addDeployment',
+                'dev.server.removeDeployment',
+                'dev.server.publishFull',
+                'dev.server.publishIncremental',
+                'dev.server.createServer',
+                'dev.server.addLocation',
+                'dev.server.downloadRuntime',
+                'dev.server.actions',
+                'dev.server.editServer',
+                'dev.server.application.run',
+                'dev.server.application.debug',
+                'dev.server.saveSelectedNode'
             ];
             const foundServerCommands = commands.filter(value => {
-                return SERVER_COMMANDS.indexOf(value) >= 0 || value.startsWith('server.');
+                return SERVER_COMMANDS.indexOf(value) >= 0 || value.startsWith('dev.server.');
             });
             const t1 = foundServerCommands.length;
             const t2 = SERVER_COMMANDS.length;

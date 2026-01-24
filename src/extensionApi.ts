@@ -433,6 +433,103 @@ export class CommandHandler {
         return this.explorer.removeDeployment(context.rsp, context.server, context.reference);
     }
 
+    public async startModule(context?: DeployableStateNode): Promise<Protocol.Status> {
+        if (context === undefined) {
+            const rsp = await this.selectRSP('Select RSP provider you want to retrieve servers');
+            if (!rsp || !rsp.id) return null;
+            const serverId = await this.selectServer(rsp.id, 'Select server to start a module on');
+            if (!serverId) return null;
+            const state: ServerStateNode | undefined = this.explorer.getServerStateById(rsp.id, serverId);
+            const deployableStates: DeployableStateNode[] = (!state || !state.deployableStates) ? [] : state.deployableStates;
+            const deployables = deployableStates.map(value => {
+                return {
+                    label: value.reference.label,
+                    deployable: value
+                };
+            });
+            const deployment = await vscode.window.showQuickPick(deployables, { placeHolder: 'Select deployment to start' });
+            if (!deployment || !deployment.deployable) return null;
+            context = deployment.deployable;
+        }
+
+        const telemetryProps: any = {
+            rsp: context.rsp,
+            type: context.server.type.id,
+        };
+        sendTelemetry('server.startModule', telemetryProps);
+
+        const serverState = this.explorer.getServerStateById(context.rsp, context.server.id);
+        if (serverState && serverState.state === ServerState.STOPPED) {
+            return Promise.reject('Cannot start module when server is stopped.');
+        }
+        if (context.state === ServerState.STARTED || context.state === ServerState.STARTING) {
+            return Promise.reject('The module is already started.');
+        }
+
+        const client: RSPClient = this.explorer.getClientByRSP(context.rsp);
+        if (!client) {
+            return Promise.reject('Failed to contact the RSP server.');
+        }
+        const req: Protocol.ServerDeployableReference = {
+            server: context.server,
+            deployableReference : context.reference
+        };
+        const response = await client.getOutgoingHandler().startModule(req);
+        if (!StatusSeverity.isOk(response)) {
+            return Promise.reject(response.message);
+        }
+        return response;
+    }
+
+    public async stopModule(context?: DeployableStateNode): Promise<Protocol.Status> {
+        if (context === undefined) {
+            const rsp = await this.selectRSP('Select RSP provider you want to retrieve servers');
+            if (!rsp || !rsp.id) return null;
+            const serverId = await this.selectServer(rsp.id, 'Select server to stop a module on');
+            if (!serverId) return null;
+            const state: ServerStateNode | undefined = this.explorer.getServerStateById(rsp.id, serverId);
+            const deployableStates: DeployableStateNode[] = (!state || !state.deployableStates) ? [] : state.deployableStates;
+            const deployables = deployableStates.map(value => {
+                return {
+                    label: value.reference.label,
+                    deployable: value
+                };
+            });
+            const deployment = await vscode.window.showQuickPick(deployables, { placeHolder: 'Select deployment to stop' });
+            if (!deployment || !deployment.deployable) return null;
+            context = deployment.deployable;
+        }
+
+        const telemetryProps: any = {
+            rsp: context.rsp,
+            type: context.server.type.id,
+            // module: context.module.id,
+        };
+        sendTelemetry('server.stopModule', telemetryProps);
+
+        const serverState = this.explorer.getServerStateById(context.rsp, context.server.id);
+        if (serverState && serverState.state === ServerState.STOPPED) {
+            return Promise.reject('Cannot stop module when server is stopped.');
+        }
+        if (context.state === ServerState.STOPPED) {
+            return Promise.reject('The module is already stopped.');
+        }
+
+        const client: RSPClient = this.explorer.getClientByRSP(context.rsp);
+        if (!client) {
+            return Promise.reject('Failed to contact the RSP server.');
+        }
+        const req: Protocol.ServerDeployableReference = {
+            server: context.server,
+            deployableReference : context.reference
+        };
+        const response = await client.getOutgoingHandler().stopModule(req);
+        if (!StatusSeverity.isOk(response)) {
+            return Promise.reject(response.message);
+        }
+        return response;
+    }
+
     public async publishServer(publishType: number, context?: ServerStateNode): Promise<Protocol.Status> {
         if (context === undefined) {
             const rsp = await this.selectRSP('Select RSP provider you want to retrieve servers');
