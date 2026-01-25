@@ -170,6 +170,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         const indexServer: number = this.RSPServersStatus.get(rspId).state.serverStates.
             findIndex(state => state.server.id === event.server.id);
         const serverToUpdate: ServerStateNode = this.RSPServersStatus.get(rspId).state.serverStates[indexServer];
+        const prevState = serverToUpdate.state;
         // update serverToUpdate based on event
         Object.keys(event).forEach(key => {
             if (key in serverToUpdate || key === 'runMode') {
@@ -192,7 +193,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         this.RSPServersStatus.get(rspId).state.serverStates[indexServer] = serverToUpdate;
         this.refresh(serverToUpdate);
         const channel: OutputChannel = this.serverOutputChannels.get(event.server.id);
-        if (event.state === ServerState.STARTING && channel) {
+        if (event.state === ServerState.STARTING && prevState !== ServerState.STARTING && channel) {
             channel.clear();
         }
     }
