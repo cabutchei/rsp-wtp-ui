@@ -10,6 +10,7 @@ import { DebugInfo } from './debug/debugInfo';
 import { DebugInfoProvider } from './debug/debugInfoProvider';
 import { JavaDebugSession } from './debug/javaDebugSession';
 import { Protocol, RSPClient, ServerState, StatusSeverity } from 'rsp-client';
+import { DeploymentAssemblyWebview } from './webviews/deploymentAssemblyWebview';
 import { DeployableStateNode, RSPProperties, RSPState, ServerExplorer, ServerStateNode } from './serverExplorer';
 import { Utils } from './utils/utils';
 import * as vscode from 'vscode';
@@ -19,6 +20,7 @@ import { getTelemetryServiceInstance, sendTelemetry } from './telemetry';
 import { JAVA_DEBUG_EXTENSION } from './constants';
 import { IRecommendationService, Level, RecommendationCore} from '@redhat-developer/vscode-extension-proposals/lib';
 import { myContext } from './extension';
+import * as path from 'path';
 
 export interface ServerActionItem {
     label: string;
@@ -837,6 +839,172 @@ export class CommandHandler {
         this.explorer.nodeSelected = server;
     }
 
+    public async showDeploymentAssembly(context: vscode.ExtensionContext, resource?: vscode.Uri | { resourceUri?: vscode.Uri }): Promise<void> {
+        const targetUri = this.resolveResourceUri(resource);
+        let projectUri = targetUri;
+        let projectName = '';
+
+        if (!projectUri) {
+            const folder = await this.pickWorkspaceFolder('Select a workspace folder to view its deployment assembly');
+            if (!folder) {
+                return;
+            }
+            projectUri = folder.uri;
+            projectName = folder.name;
+        } else {
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(projectUri);
+            if (workspaceFolder) {
+                projectUri = workspaceFolder.uri;
+                projectName = workspaceFolder.name;
+            } else {
+                projectName = path.basename(projectUri.fsPath);
+            }
+        }
+
+        const rsp = await this.selectRSP('Select RSP provider you want to retrieve deployment assembly');
+        const client: RSPClient = this.explorer.getClientByRSP(rsp.id);
+        if (!client) {
+            return Promise.reject('Failed to contact the RSP server.');
+        }
+
+        const loadEntries = async (): Promise<Protocol.DeploymentAssemblyEntry[]> => {
+            const response = await client.getOutgoingHandler().getDeploymentAssembly({
+                path: projectUri.fsPath,
+                projectName: projectName,
+            });
+            if (!StatusSeverity.isOk(response.status)) {
+                throw new Error(response.status.message || 'Failed to get deployment assembly.');
+            }
+            return response.entries || [];
+        };
+
+        const refreshPanel = async (panel: vscode.WebviewPanel): Promise<void> => {
+            const entries = await loadEntries();
+            await panel.webview.postMessage({
+                type: 'deploymentAssembly',
+                payload: {
+                    entries,
+                    projectName: projectName,
+                    projectPath: projectUri.fsPath,
+                },
+            });
+        };
+
+        const handleAddEntry = async (option: string, panel: vscode.WebviewPanel): Promise<void> => {
+            if (option === 'workspaceArchives') {
+                vscode.window.showInformationMessage('Archives from Workspace is not implemented yet.');
+                return;
+            }
+            if (option === 'fileSystem') {
+                const file = await vscode.window.showOpenDialog({
+                    canSelectFiles: true,
+                    canSelectFolders: false,
+                    canSelectMany: false,
+                    title: 'Select an archive file',
+                });
+                if (!file || file.length === 0) {
+                    return;
+                }
+                const deployPath = await vscode.window.showInputBox({
+                    prompt: 'Deploy path for archive',
+                    value: '/WEB-INF/lib',
+                });
+                if (!deployPath) {
+                    return;
+                }
+                const status = await client.getOutgoingHandler().addDeploymentAssemblyEntry({
+                    path: projectUri.fsPath,
+                    projectName: projectName,
+                    entry: {
+                        sourcePath: file[0].fsPath,
+                        deployPath: deployPath,
+                        sourceKind: 'archive',
+                        deployKind: 'archive',
+                    },
+                });
+                if (!StatusSeverity.isOk(status)) {
+                    throw new Error(status.message || 'Failed to add deployment assembly entry.');
+                }
+                await refreshPanel(panel);
+                return;
+            }
+            if (option === 'project') {
+                const projectsResponse = await client.getOutgoingHandler().listWorkspaceProjects();
+                if (!StatusSeverity.isOk(projectsResponse.status)) {
+                    throw new Error(projectsResponse.status.message || 'Failed to list workspace projects.');
+                }
+                const candidates = (projectsResponse.projects || [])
+                    .filter(p => p && p.name && p.open && p.name !== projectName);
+                if (candidates.length === 0) {
+                    vscode.window.showInformationMessage('No additional workspace projects are available.');
+                    return;
+                }
+                const pick = await vscode.window.showQuickPick(
+                    candidates.map(p => ({ label: p.name, project: p })),
+                    { placeHolder: 'Select a project to add' },
+                );
+                if (!pick) {
+                    return;
+                }
+                const deployPath = await vscode.window.showInputBox({
+                    prompt: 'Deploy path for project reference',
+                    value: '/',
+                });
+                if (!deployPath) {
+                    return;
+                }
+                const status = await client.getOutgoingHandler().addDeploymentAssemblyEntry({
+                    path: projectUri.fsPath,
+                    projectName: projectName,
+                    entry: {
+                        sourcePath: pick.project.name,
+                        deployPath: deployPath,
+                        sourceKind: 'project',
+                        deployKind: 'archive',
+                    },
+                });
+                if (!StatusSeverity.isOk(status)) {
+                    throw new Error(status.message || 'Failed to add deployment assembly entry.');
+                }
+                await refreshPanel(panel);
+                return;
+            }
+        };
+
+        const handleRemoveEntry = async (entry: Protocol.DeploymentAssemblyEntry, panel: vscode.WebviewPanel): Promise<void> => {
+            if (!entry) {
+                return;
+            }
+            const status = await client.getOutgoingHandler().removeDeploymentAssemblyEntry({
+                path: projectUri.fsPath,
+                projectName: projectName,
+                entry: entry,
+            });
+            if (!StatusSeverity.isOk(status)) {
+                throw new Error(status.message || 'Failed to remove deployment assembly entry.');
+            }
+            await refreshPanel(panel);
+        };
+
+        const entries = await loadEntries();
+        DeploymentAssemblyWebview.show(context, {
+            entries: entries,
+            projectName: projectName,
+            projectPath: projectUri.fsPath,
+        }, async (message, panel) => {
+            if (!message) {
+                return;
+            }
+            if (message.type === 'addEntry') {
+                await handleAddEntry(message.option, panel);
+                return;
+            }
+            if (message.type === 'removeEntry') {
+                await handleRemoveEntry(message.entry, panel);
+            }
+        });
+    }
+
     private async selectRSP(message: string, predicateFilter?: (value: RSPProperties) => unknown): Promise<{ label: string; id: string; }> {
         const vals: RSPProperties[] = Array.from(this.explorer.RSPServersStatus.values());
         const predicateFilter2 = predicateFilter ? predicateFilter : value => value.state.state === ServerState.STARTED;
@@ -862,6 +1030,32 @@ export class CommandHandler {
             return rspProviders[0];
         }
         return await vscode.window.showQuickPick(rspProviders, { placeHolder: message });
+    }
+
+    private resolveResourceUri(resource?: vscode.Uri | { resourceUri?: vscode.Uri }): vscode.Uri {
+        if (!resource) {
+            return undefined;
+        }
+        if (resource instanceof vscode.Uri) {
+            return resource;
+        }
+        const candidate = (resource as { resourceUri?: vscode.Uri }).resourceUri;
+        return candidate instanceof vscode.Uri ? candidate : undefined;
+    }
+
+    private async pickWorkspaceFolder(message: string): Promise<vscode.WorkspaceFolder> {
+        const folders = vscode.workspace.workspaceFolders || [];
+        if (folders.length === 0) {
+            return Promise.reject('No workspace folders are available.');
+        }
+        if (folders.length === 1) {
+            return folders[0];
+        }
+        const pick = await vscode.window.showQuickPick(
+            folders.map(folder => ({ label: folder.name, folder })),
+            { placeHolder: message },
+        );
+        return pick ? pick.folder : undefined;
     }
 
     private async selectServer(rspId: string, message: string, stateFilter?: (value: ServerStateNode) => unknown): Promise<string> {
@@ -977,6 +1171,7 @@ export class CommandHandler {
     }
 
     private displayLog(outputPanel: vscode.OutputChannel, message: string, show = true) {
+        show = false;
         if (outputPanel) {
             if (show) outputPanel.show(true);
             outputPanel.appendLine(message);

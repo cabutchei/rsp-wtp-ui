@@ -44,7 +44,10 @@
 		"onCommand:dev.server.add",
 		"onCommand:dev.server.publishFull",
 		"onCommand:dev.server.publishIncremental",
+		"onCommand:dev.server.startModule",
+		"onCommand:dev.server.stopModule",
 		"onCommand:dev.server.actions",
+		"onCommand:dev.server.deploymentAssembly",
 		"onView:dev.servers",
 		"onLanguage:plaintext"
 	],
@@ -139,6 +142,16 @@
 				"category": "Servers"
 			},
 			{
+				"command": "dev.server.startModule",
+				"title": "Dev: Start Module",
+				"category": "Servers"
+			},
+			{
+				"command": "dev.server.stopModule",
+				"title": "Dev: Stop Module",
+				"category": "Servers"
+			},
+			{
 				"command": "dev.server.publishIncremental",
 				"title": "Dev: Publish Server (Incremental)",
 				"category": "Servers"
@@ -151,6 +164,11 @@
 			{
 				"command": "dev.server.actions",
 				"title": "Dev: Server Actions...",
+				"category": "Servers"
+			},
+			{
+				"command": "dev.server.deploymentAssembly",
+				"title": "Dev: Deployment Assembly",
 				"category": "Servers"
 			},
 			{
@@ -258,7 +276,7 @@
 				},
 				{
 					"command": "dev.server.publishIncremental",
-					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"when": "view == dev.servers && viewItem =~ /^(Deployable)?(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "3_server-deployments@6"
 				},
 				{
@@ -273,8 +291,18 @@
 				},
 				{
 					"command": "dev.server.removeDeployment",
-					"when": "view == dev.servers && viewItem =~ /^(Synchronized|[+|-|Full]* Publish|Unknown)/",
+					"when": "view == dev.servers && viewItem =~ /\\s(Synchronized|[+|-|Full]* Publish|Unknown)/",
 					"group": "3_server-deployments@2"
+				},
+				{
+					"command": "dev.server.startModule",
+					"when": "view == dev.servers && viewItem =~ /^Deployable(Stopped)/",
+					"group": "3_server-modules@1"
+				},
+				{
+					"command": "dev.server.stopModule",
+					"when": "view == dev.servers && viewItem =~ /^Deployable(Started|Starting)/",
+					"group": "3_server-modules@2"
 				},
 				{
 					"command": "dev.server.output",
@@ -310,6 +338,11 @@
 				{
 					"command": "dev.server.application.debug",
 					"group": "1_server-application@2"
+				},
+				{
+					"command": "dev.server.deploymentAssembly",
+					"when": "explorerResourceIsFolder",
+					"group": "1_server-application@3"
 				}
 			]
 		},
@@ -411,6 +444,8 @@
 		"@redhat-developer/vscode-redhat-telemetry": "0.4.2",
 		"@redhat-developer/vscode-wizard": "^0.2.28",
 		"path": "0.12.7",
+		"react": "^18.2.0",
+		"react-dom": "^18.2.0",
 		"rsp-client": "^0.25.0",
 		"tmp": "^0.2.1",
 		"vscode-server-connector-api": "0.1.7"

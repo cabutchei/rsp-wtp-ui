@@ -178,7 +178,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             }
         });
         serverToUpdate.deployableStates = this.convertToDeployableStateNodes(rspId, event.deployableStates);
-        if (event.moduleStates != null) {
+        if (event?.moduleStates != null) {
             serverToUpdate.moduleStates = this.convertToModuleStateNodes(rspId, event.server, event.moduleStates);
         } else {
             this.fetchModuleStates(rspId, event.server).then(moduleNodes => {
@@ -313,6 +313,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     public async selectAndAddDeployment(state: ServerStateNode): Promise<Protocol.Status> {
         return this.createDeploymentOpenDialogOptions()
             .then(options => options && window.showOpenDialog(options))
+            // .then.(() => window.showQuickPick(deployables))
             .then(async file => this.addDeployment(file, state));
     }
 
@@ -1011,13 +1012,12 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             const state: ModuleStateNode = item as ModuleStateNode;
             const icon = await Utils.getIcon(state.rsp, state.server.type.id);
             const moduleLabel = state.module.name || state.module.id;
-            const stateLabel = this.runStateEnum.get(state.state);
             const pubLabel = this.publishStateEnum.get(state.publishState);
-            const descriptionParts = [stateLabel, pubLabel].filter(Boolean).map(value => `(${value})`);
-            const contextValue = stateLabel ? `Module${stateLabel}` : 'Module';
+            const description = pubLabel ? `(${pubLabel})` : '';
+            const contextValue = pubLabel ? `Module${pubLabel}` : 'Module';
             return {
                 label: moduleLabel,
-                description: descriptionParts.join(' '),
+                description,
                 iconPath: icon,
                 contextValue,
                 collapsibleState: TreeItemCollapsibleState.None

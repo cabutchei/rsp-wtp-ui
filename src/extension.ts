@@ -96,6 +96,8 @@ async function registerCommands(commandHandler: CommandHandler, context: vscode.
             commandHandler.addLocation, commandHandler, context, 'Unable to detect any server: ')),
         vscode.commands.registerCommand('dev.server.downloadRuntime', context => executeCommandAndLog('dev.server.downloadRuntime',
             commandHandler.downloadRuntime, commandHandler, context, 'Unable to detect any runtime: ')),
+        vscode.commands.registerCommand('dev.server.deploymentAssembly', (resource: vscode.Uri) => executeCommand(
+            commandHandler.showDeploymentAssembly, commandHandler, context, resource, 'Unable to load deployment assembly: ')),
         vscode.workspace.onDidSaveTextDocument(onDidSaveTextDocument),
         vscode.workspace.onDidCloseTextDocument(onDidCloseTextDocument)
     ];
