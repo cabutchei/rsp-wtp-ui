@@ -47,6 +47,7 @@
 		"onCommand:dev.server.startModule",
 		"onCommand:dev.server.stopModule",
 		"onCommand:dev.server.actions",
+		"onCommand:dev.server.syncJavaRuntime",
 		"onCommand:dev.server.deploymentAssembly",
 		"onView:dev.servers",
 		"onLanguage:plaintext"
@@ -174,6 +175,11 @@
 			{
 				"command": "dev.server.editServer",
 				"title": "Dev: Edit Server",
+				"category": "Servers"
+			},
+			{
+				"command": "dev.server.syncJavaRuntime",
+				"title": "Dev: Sync Java Runtime",
 				"category": "Servers"
 			},
 			{
@@ -328,6 +334,11 @@
 					"command": "dev.server.editServer",
 					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "6_server-info@2"
+				},
+				{
+					"command": "dev.server.syncJavaRuntime",
+					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"group": "6_server-info@3"
 				}
 			],
 			"explorer/context": [
@@ -404,7 +415,10 @@
 					"description": "Specifies which RSP Server have to be automatically started during activation. If option is disabled, user will have to manually start the RSP Server through command palette or context menu"
 				}
 			}
-		}
+		},
+		"javaExtensions": [
+			"bundles/com.github.cabutchei.container.plugin-1.0.0-SNAPSHOT.jar"
+		]
 	},
 	"scripts": {
 		"vscode:prepublish": "npm run compile",

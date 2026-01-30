@@ -21,6 +21,7 @@ import { JAVA_DEBUG_EXTENSION } from './constants';
 import { IRecommendationService, Level, RecommendationCore} from '@redhat-developer/vscode-extension-proposals/lib';
 import { myContext } from './extension';
 import * as path from 'path';
+import * as fs from 'fs';
 
 export interface ServerActionItem {
     label: string;
@@ -790,6 +791,49 @@ export class CommandHandler {
 
     }
 
+    public async syncJavaRuntime(context?: ServerStateNode): Promise<void> {
+        this.assertExplorerExists();
+        if (context === undefined) {
+            const rsp = await this.selectRSP('Select RSP provider you want to retrieve servers');
+            if (!rsp || !rsp.id) return null;
+            const serverId = await this.selectServer(rsp.id, 'Select server you want to sync Java runtime for');
+            if (!serverId) return null;
+            context = this.explorer.getServerStateById(rsp.id, serverId);
+        }
+
+        const telemetryProps: any = {
+            rsp: context.rsp,
+            type: context.server.type.id,
+        };
+        const startTime = Date.now();
+        try {
+            const client: RSPClient = this.explorer.getClientByRSP(context.rsp);
+            if (!client) {
+                return Promise.reject(`Failed to contact the RSP server ${context.rsp}.`);
+            }
+            const response = await client.getOutgoingHandler().getServerAsJson(context.server);
+            if (!response || !StatusSeverity.isOk(response.status)) {
+                const message = response?.status?.message || 'Failed to read server configuration.';
+                return Promise.reject(message);
+            }
+            const vmInstallPath = this.extractServerAttribute(response.serverJson, 'vm.install.path')
+                || this.extractServerAttribute(response.serverJson, 'java.home');
+            if (!vmInstallPath) {
+                return Promise.reject('No vm.install.path attribute found in the server configuration.');
+            }
+            const javaHome = this.normalizeJavaHome(vmInstallPath);
+            const runtimeName = await this.getExecutionEnvironmentName(javaHome);
+            if (!runtimeName) {
+                return Promise.reject(`Unable to determine Java version for ${javaHome}.`);
+            }
+            await this.updateJavaConfigurationRuntimes(runtimeName, javaHome);
+            vscode.window.showInformationMessage(`Java runtime ${runtimeName} configured at ${javaHome}.`);
+        } finally {
+            telemetryProps.duration = Date.now() - startTime;
+            sendTelemetry('server.syncJavaRuntime', telemetryProps);
+        }
+    }
+
     public async runOnServer(uri: vscode.Uri, mode?: string): Promise<void> {
         if (!this.explorer) {
             return Promise.reject('Runtime Server Protocol (RSP) Server is starting, please try again later.');
@@ -1131,6 +1175,120 @@ export class CommandHandler {
         return answer.id;
     }
 
+    private extractServerAttribute(serverJson: string, key: string): string | undefined {
+        if (!serverJson) {
+            return undefined;
+        }
+        try {
+            const data = JSON.parse(serverJson);
+            return this.findAttributeValue(data, key);
+        } catch (err) {
+            return undefined;
+        }
+    }
+
+    private findAttributeValue(data: any, key: string): string | undefined {
+        if (!data || typeof data !== 'object') {
+            return undefined;
+        }
+        if (Object.prototype.hasOwnProperty.call(data, key)) {
+            return data[key] !== undefined && data[key] !== null ? String(data[key]) : undefined;
+        }
+        const attributes = (data as { attributes?: Record<string, any> }).attributes;
+        if (attributes && Object.prototype.hasOwnProperty.call(attributes, key)) {
+            const val = attributes[key];
+            return val !== undefined && val !== null ? String(val) : undefined;
+        }
+        for (const value of Object.values(data)) {
+            if (value && typeof value === 'object') {
+                const found = this.findAttributeValue(value, key);
+                if (found) {
+                    return found;
+                }
+            }
+        }
+        return undefined;
+    }
+
+    private normalizeJavaHome(javaHome: string): string {
+        if (!javaHome) {
+            return javaHome;
+        }
+        let normalized = javaHome;
+        const base = path.basename(normalized);
+        if (base === 'java' || base === 'java.exe') {
+            normalized = path.dirname(path.dirname(normalized));
+        } else if (base === 'bin') {
+            normalized = path.dirname(normalized);
+        }
+        return normalized;
+    }
+
+    private async getExecutionEnvironmentName(javaHome: string): Promise<string | undefined> {
+        const version = await this.readJavaVersion(javaHome);
+        if (!version) {
+            return undefined;
+        }
+        return version <= 8 ? `JavaSE-1.${version}` : `JavaSE-${version}`;
+    }
+
+    private async readJavaVersion(javaHome: string): Promise<number | undefined> {
+        try {
+            const releasePath = path.join(javaHome, 'release');
+            const content = await fs.promises.readFile(releasePath, 'utf8');
+            const match = /JAVA_VERSION=\"([^\"]+)\"/.exec(content);
+            if (!match) {
+                return undefined;
+            }
+            return this.parseJavaVersion(match[1]);
+        } catch (err) {
+            return undefined;
+        }
+    }
+
+    private parseJavaVersion(version: string): number | undefined {
+        if (!version) {
+            return undefined;
+        }
+        const cleaned = version.trim().replace(/^\"|\"$/g, '');
+        if (cleaned.startsWith('1.')) {
+            const parts = cleaned.split('.');
+            const major = parseInt(parts[1], 10);
+            return Number.isNaN(major) ? undefined : major;
+        }
+        const major = parseInt(cleaned.split('.')[0], 10);
+        return Number.isNaN(major) ? undefined : major;
+    }
+
+    private async updateJavaConfigurationRuntimes(name: string, javaHome: string): Promise<void> {
+        const config = vscode.workspace.getConfiguration('java.configuration');
+        const runtimes = (config.get<any[]>('runtimes') || []).slice();
+        const existingByPath = runtimes.findIndex(runtime => runtime?.path === javaHome);
+        const existingByName = runtimes.findIndex(runtime => runtime?.name === name);
+        const newEntry = { name, path: javaHome };
+
+        if (existingByName >= 0 && existingByPath < 0) {
+            const existingPath = runtimes[existingByName]?.path;
+            if (existingPath && existingPath !== javaHome) {
+                const selection = await vscode.window.showWarningMessage(
+                    `Java runtime ${name} is already configured at ${existingPath}. Replace it with ${javaHome}?`,
+                    'Replace',
+                    'Cancel'
+                );
+                if (selection !== 'Replace') {
+                    return;
+                }
+            }
+            runtimes[existingByName] = { ...runtimes[existingByName], ...newEntry };
+        } else if (existingByPath >= 0) {
+            runtimes[existingByPath] = { ...runtimes[existingByPath], ...newEntry };
+        } else {
+            runtimes.push(newEntry);
+        }
+
+        await config.update('runtimes', runtimes, vscode.ConfigurationTarget.Global);
+    }
+
     private async checkDebuggerPrereqs(debugInfo: DebugInfo): Promise<string | undefined> {
         if (!debugInfo) {
             return 'Could not find server debug info.';
@@ -1178,6 +1336,54 @@ export class CommandHandler {
         }
     }
 
+    private async handleJdtlsJreContainersDetected(event: Protocol.JreContainerMappings): Promise<void> {
+        if (!event || !event.mappings || event.mappings.length === 0) {
+            return;
+        }
+        const vmKeys = new Set<string>();
+        const vmRequests: Array<{ vmName: string; javaHome: string }> = [];
+        for (const mapping of event.mappings) {
+            if (!mapping || !mapping.javaHome || !mapping.vmName) {
+                continue;
+            }
+            const key = `${mapping.vmName}::${mapping.javaHome}`;
+            if (!vmKeys.has(key)) {
+                vmKeys.add(key);
+                vmRequests.push({ vmName: mapping.vmName, javaHome: mapping.javaHome });
+            }
+        }
+        for (const request of vmRequests) {
+            await this.executeJdtlsWorkspaceCommand('org.jboss.tools.rsp.jdtls.createVmInstall', {
+                javaHome: request.javaHome,
+                vmName: request.vmName,
+            });
+        }
+        const seenContainers = new Set<string>();
+        for (const mapping of event.mappings) {
+            if (!mapping || !mapping.projectUri || !mapping.containerPath) {
+                continue;
+            }
+            const key = `${mapping.projectUri}::${mapping.containerPath}`;
+            if (seenContainers.has(key)) {
+                continue;
+            }
+            seenContainers.add(key);
+            await this.executeJdtlsWorkspaceCommand('org.jboss.tools.rsp.jdtls.setJreContainer', {
+                projectUri: mapping.projectUri,
+                containerPath: mapping.containerPath,
+            });
+        }
+    }
+
+    private async executeJdtlsWorkspaceCommand(command: string, args: Record<string, unknown>): Promise<unknown> {
+        try {
+            return await vscode.commands.executeCommand('java.execute.workspaceCommand', command, args);
+        } catch (err) {
+            console.warn(`Failed to execute JDT LS command ${command}.`, err);
+            return undefined;
+        }
+    }
+
     public async setRSPListener(rspId: string, rspProvider: RSPController): Promise<void> {
         rspProvider.onRSPServerStateChanged(state => {
             this.explorer.updateRSPServer(rspId, state);
@@ -1199,6 +1405,10 @@ export class CommandHandler {
 
         client.getIncomingHandler().onServerProcessOutputAppended(event => {
             this.explorer.addServerOutput(event);
+        });
+
+        client.getIncomingHandler().onJdtlsJreContainersDetected(event => {
+            this.handleJdtlsJreContainersDetected(event);
         });
     }
 }

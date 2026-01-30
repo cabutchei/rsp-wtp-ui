@@ -83,6 +83,8 @@ async function registerCommands(commandHandler: CommandHandler, context: vscode.
             commandHandler.serverActions, commandHandler, context, 'Unable to execute action')),
         vscode.commands.registerCommand('dev.server.saveSelectedNode', context => executeCommandAndLog('dev.server.saveSelectedNode',
             commandHandler.saveSelectedNode, commandHandler, context)),
+        vscode.commands.registerCommand('dev.server.syncJavaRuntime', context => executeCommand(
+            commandHandler.syncJavaRuntime, commandHandler, context, 'Unable to sync Java runtime: ')),
         vscode.commands.registerCommand('dev.server.application.run', context => executeCommand(
             commandHandler.runOnServer, commandHandler, context, 'run', 'Unable to deploy and run application')),
         vscode.commands.registerCommand('dev.server.application.debug', context => executeCommand(
