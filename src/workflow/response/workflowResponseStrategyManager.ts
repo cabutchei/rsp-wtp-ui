@@ -2,6 +2,7 @@ import { WorkflowResponseStrategyBrowser } from './workflowResponseStrategyBrows
 import { WorkflowResponseStrategyEditor } from './workflowResponseStrategyEditor';
 import { WorkflowResponseStrategyPromptSmall } from './workflowResponseStrategyPromptSmall';
 import { WorkflowResponseStrategyTerminal } from './workflowResponseStrategyTerminal';
+import { WorkflowResponseStrategyWebview } from './workflowResponseStrategyWebview';
 
 export interface WorkflowResponseStrategy {
     name: string;
@@ -31,6 +32,10 @@ export class WorkflowResponseStrategyManager {
         this.strategies.push({
             name: 'workflow.terminal.open',
             handler: WorkflowResponseStrategyTerminal.doAction
+        });
+        this.strategies.push({
+            name: 'workflow.webview.open',
+            handler: WorkflowResponseStrategyWebview.doAction
         });
     }
 

@@ -311,10 +311,56 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async selectAndAddDeployment(state: ServerStateNode): Promise<Protocol.Status> {
-        return this.createDeploymentOpenDialogOptions()
-            .then(options => options && window.showOpenDialog(options))
-            // .then.(() => window.showQuickPick(deployables))
-            .then(async file => this.addDeployment(file, state));
+        const client: RSPClient = this.getClientByRSP(state.rsp);
+        if (!client) {
+            return Promise.reject('Unable to contact the RSP server.');
+        }
+        const response = await client.getOutgoingHandler().getDeployableResources(state.server);
+        if (!StatusSeverity.isOk(response.status)) {
+            return Promise.reject(response.status.message || 'Failed to list workspace deployables.');
+        }
+        const resources = response.resources || [];
+        if (resources.length === 0) {
+            window.showInformationMessage('No workspace deployables are available for this server.');
+            return;
+        }
+        const pick = await window.showQuickPick(
+            resources.map(resource => ({
+                label: resource.label || resource.path,
+                description: resource.label && resource.path ? resource.path : undefined,
+                resource,
+            })),
+            { placeHolder: 'Select deployment to add' }
+        );
+        if (!pick || !pick.resource) {
+            return;
+        }
+        return this.addDeploymentReference(pick.resource, state);
+    }
+
+    private async addDeploymentReference(deployable: Protocol.DeployableReference, state: ServerStateNode): Promise<Protocol.Status> {
+        const client: RSPClient = this.RSPServersStatus.get(state.rsp).client;
+        if (!client || !deployable) {
+            return;
+        }
+        const options = await this.getDeploymentOptions(client, state);
+        if (!options) {
+            return;
+        }
+        const deployableRef: Protocol.DeployableReference = {
+            label: deployable.label,
+            path: deployable.path,
+            options,
+        };
+        const req: Protocol.ServerDeployableReference = {
+            server: state.server,
+            deployableReference: deployableRef
+        };
+        const status = await client.getOutgoingHandler().addDeployable(req);
+        if (!StatusSeverity.isOk(status)) {
+            return Promise.reject(status.message);
+        }
+        return status;
     }
 
     public async addDeployment(file: Uri[], state: ServerStateNode): Promise<Protocol.Status> {
@@ -361,18 +407,6 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             workspaceFileUri !== undefined ? workspaceFileUri : activeEditorUri;
         return uriToOpen;
     }
-    private async createDeploymentOpenDialogOptions(): Promise<OpenDialogOptions> {
-        const showQuickPick: boolean = process.platform === 'win32' ||
-                                       process.platform === 'linux';
-        const filePickerType : FilePickerType | undefined = await this.quickPickDeploymentType(showQuickPick);
-        if (!filePickerType) {
-            return;
-        }
-        const typeString = filePickerType === 
-            FilePickerType.FOLDER ? 'Exploded' : 
-            filePickerType === FilePickerType.FILE ? 'File' : 'file or exploded';
-        return this.createOpenDialogOptions(filePickerType,  `Select ${typeString} Deployment`);
-    }
     private createOpenDialogOptions(type: FilePickerType, label: string | undefined): OpenDialogOptions {
         // dialog behavior on different OS
         // Windows -> if both options (canSelectFiles and canSelectFolders) are true, fs only shows folders
@@ -389,6 +423,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         }
         return ret;
     }
+
 
     private async getDeploymentOptions(client: RSPClient, state: ServerStateNode): Promise<Record<string, unknown>> {
         const answer = await window.showQuickPick(['No', 'Yes'], {placeHolder:
@@ -942,18 +977,6 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             }
         }
         return attributes;
-    }
-
-    private async quickPickDeploymentType(showQuickPick: boolean): Promise<FilePickerType | undefined> {
-        // quickPick to solve a vscode api bug in windows that only opens file-picker dialog either in file or folder mode
-        if (showQuickPick) {
-            const ret = await window.showQuickPick(['File', 'Exploded'], {placeHolder:
-                'What type of deployment do you want to add?'});
-            if(!ret)
-                return undefined;
-            return ret === 'File' ? FilePickerType.FILE : FilePickerType.FOLDER;
-        }
-        return FilePickerType.BOTH;
     }
 
     public async getTreeItem(item: RSPState | ServerStateNode |  DeployableStateNode | ModuleStateNode): Promise<TreeItem> {

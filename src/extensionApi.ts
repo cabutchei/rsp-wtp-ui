@@ -973,12 +973,15 @@ export class CommandHandler {
                 return;
             }
             if (option === 'project') {
-                const projectsResponse = await client.getOutgoingHandler().listWorkspaceProjects();
+                const projectsResponse = await client.getOutgoingHandler().listDeploymentAssemblyProjects({
+                    path: projectUri.fsPath,
+                    projectName: projectName,
+                });
                 if (!StatusSeverity.isOk(projectsResponse.status)) {
-                    throw new Error(projectsResponse.status.message || 'Failed to list workspace projects.');
+                    throw new Error(projectsResponse.status.message || 'Failed to list deployment assembly projects.');
                 }
-                const candidates = (projectsResponse.projects || [])
-                    .filter(p => p && p.name && p.open && p.name !== projectName);
+                const candidates = (projectsResponse.projects || []);
+                    // .filter(p => p && p.name);
                 if (candidates.length === 0) {
                     vscode.window.showInformationMessage('No additional workspace projects are available.');
                     return;
