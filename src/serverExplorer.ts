@@ -30,7 +30,7 @@ import {
 } from 'rsp-wtp-client';
 import { ServerEditorAdapter } from './serverEditorAdapter';
 import { Utils } from './utils/utils';
-import { RSPType, ServerInfo } from 'vscode-server-connector-api';
+import { RSPType, ServerInfo } from 'rsp-wtp-server-connector-api';
 import { sendTelemetry } from './telemetry';
 import { IWizardPage, SEVERITY, ValidatorResponseItem, WebviewWizard, WizardDefinition,WizardPageFieldDefinition, WizardPageSectionDefinition } from '@redhat-developer/vscode-wizard';
 import { PerformFinishResponse } from '@redhat-developer/vscode-wizard/lib/IWizardWorkflowManager';
@@ -277,14 +277,14 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             this.serverOutputChannels.set(output.server.id, channel);
         }
         channel.append(output.text);
-        if (workspace.getConfiguration('dev.vscodeAdapters').get<boolean>('showChannelOnServerOutput')) {
+        if (workspace.getConfiguration('rsp-wtp-ui.connectors').get<boolean>('showChannelOnServerOutput')) {
             channel.show(true);
         }
     }
 
     public showOutput(state: ServerStateNode): void {
         const channel: OutputChannel = this.serverOutputChannels.get(state.server.id);
-        if (channel && workspace.getConfiguration('dev.vscodeAdapters').get<boolean>('showChannelOnServerOutput')) {
+        if (channel && workspace.getConfiguration('rsp-wtp-ui.connectors').get<boolean>('showChannelOnServerOutput')) {
             channel.show(true);
         }
     }

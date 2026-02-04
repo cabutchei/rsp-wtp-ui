@@ -19,7 +19,7 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import { Utils } from '../src/utils/utils';
 import * as vscode from 'vscode';
-import { RSPController, ServerInfo } from 'vscode-server-connector-api';
+import { RSPController, ServerInfo } from 'rsp-wtp-server-connector-api';
 import { WorkflowResponseStrategyManager } from '../src/workflow/response/workflowResponseStrategyManager';
 
 const expect = chai.expect;
@@ -422,7 +422,7 @@ suite('Command Handler', () => {
             try {
                 await handler.debugServer(ProtocolStubs.unknownServerState);
             } catch (err) {
-                expect(err).equals('vscode-rsp-ui doesn\'t support debugging with c# language at this time.');
+                expect(err).equals('rsp-wtp-ui doesn\'t support debugging with c# language at this time.');
             }
         });
 

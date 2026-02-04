@@ -6,7 +6,7 @@ import { JobProgress } from '../../src/jobprogress';
 import { Protocol, RSPWTPClient } from 'rsp-wtp-client';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
-import { ServerInfo } from 'vscode-server-connector-api';
+import { ServerInfo } from 'rsp-wtp-server-connector-api';
 
 const expect = chai.expect;
 chai.use(sinonChai);

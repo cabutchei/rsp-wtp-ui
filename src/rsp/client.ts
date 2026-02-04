@@ -1,7 +1,7 @@
 import { JobProgress } from '../jobprogress';
 import { Protocol, RSPWTPClient } from 'rsp-wtp-client';
 import * as vscode from 'vscode';
-import { ServerInfo } from 'vscode-server-connector-api';
+import { ServerInfo } from 'rsp-wtp-server-connector-api';
 
 const PROTOCOL_VERSION = '0.23.0';
 

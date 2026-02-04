@@ -10,7 +10,7 @@ import { getAPI } from './api/implementation/rspProviderAPI';
 import { ServerEditorAdapter } from './serverEditorAdapter';
 import { ServerExplorer } from './serverExplorer';
 import * as vscode from 'vscode';
-import { RSPModel } from 'vscode-server-connector-api';
+import { RSPModel } from 'rsp-wtp-server-connector-api';
 import { getTelemetryServiceInstance, initializeTelemetry, sendTelemetry}  from './telemetry';
 import { IRecommendationService, RecommendationCore } from '@redhat-developer/vscode-extension-proposals/lib';
 import { JAVA_DEBUG_EXTENSION } from './constants';

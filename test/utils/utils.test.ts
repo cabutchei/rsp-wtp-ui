@@ -8,7 +8,7 @@ import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import { Utils } from '../../src/utils/utils';
 import * as vscode from 'vscode';
-import { RSPController } from 'vscode-server-connector-api';
+import { RSPController } from 'rsp-wtp-server-connector-api';
 import { Protocol } from 'rsp-wtp-client';
 
 const expect = chai.expect;

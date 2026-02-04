@@ -9,7 +9,7 @@ import { window } from 'vscode';
 import { myContext } from '../extension';
 
 
-export const GLOBAL_STATE_SERVER_DEBUG_PROJECT_NAME_PREFIX = 'rsp-ui.server.debug.projectName';
+export const GLOBAL_STATE_SERVER_DEBUG_PROJECT_NAME_PREFIX = 'rsp-wtp-ui.server.debug.projectName';
 export class JavaDebugSession {
 
     private port: string;

@@ -2,7 +2,7 @@ import { executeCommandAndLog } from '../../extension';
 import { CommandHandler } from '../../extensionApi';
 import { RSPProperties, RSPState, ServerExplorer } from '../../serverExplorer';
 import * as vscode from 'vscode';
-import { RSPModel, RSPServer } from 'vscode-server-connector-api';
+import { RSPModel, RSPServer } from 'rsp-wtp-server-connector-api';
 
 interface RSPProviderSetting {
     id: string;

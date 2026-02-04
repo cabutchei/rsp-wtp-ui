@@ -1,4 +1,4 @@
-# Data collection
+<!-- # Data collection
 
 [RSP UI by Red Hat](https://github.com/redhat-developer/vscode-rsp-ui) has opt-in telemetry collection, provided by [vscode-redhat-telemetry](https://github.com/redhat-developer/vscode-redhat-telemetry).
 
@@ -21,4 +21,4 @@ for information on what data it collects.
 ## How to opt in or out
 
 Use the `redhat.telemetry.enabled` setting in order to enable or disable telemetry collection.
-
+ -->

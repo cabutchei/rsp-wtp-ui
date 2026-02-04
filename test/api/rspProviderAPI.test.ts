@@ -6,7 +6,7 @@ import { ServerExplorer } from '../../src/serverExplorer';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import { window } from 'vscode';
-import { RSPModel, RSPServer } from 'vscode-server-connector-api';
+import { RSPModel, RSPServer } from 'rsp-wtp-server-connector-api';
 
 const expect = chai.expect;
 chai.use(sinonChai);

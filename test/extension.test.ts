@@ -46,7 +46,7 @@ suite('Extension Tests', () => {
         extensionPath = extensionPath.substring(0, testFolder);
     }
 
-    const temporaryStorage = extensionPath + "/out/tmp/inner/temporaryGlobalStorage";
+    const temporaryStorage = extensionPath + '/out/tmp/inner/temporaryGlobalStorage';
     fs.mkdirSync(temporaryStorage, {recursive:true});
 
     const context: vscode.ExtensionContext = {
@@ -68,7 +68,7 @@ suite('Extension Tests', () => {
         globalStorageUri: vscode.Uri.file(temporaryStorage),
         secrets: undefined,
         extension: {
-            id: 'redhat.vscode-rsp-ui',
+            id: 'cabutchei.rsp-wtp-ui',
             extensionUri: undefined,
             extensionPath: undefined,
             isActive: true,
@@ -101,7 +101,7 @@ suite('Extension Tests', () => {
     });
 
     test('Extension should be present', () => {
-        assert.ok(vscode.extensions.getExtension('redhat.vscode-rsp-ui'));
+        assert.ok(vscode.extensions.getExtension('cabutchei.rsp-wtp-ui'));
     });
 
     test('Server is started at extension activation time', async () => {

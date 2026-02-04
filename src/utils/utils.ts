@@ -1,6 +1,6 @@
 import { Protocol } from 'rsp-wtp-client';
 import * as vscode from 'vscode';
-import { RSPController } from 'vscode-server-connector-api';
+import { RSPController } from 'rsp-wtp-server-connector-api';
 
 export class Utils {
 

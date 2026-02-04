@@ -4,7 +4,7 @@
  *-----------------------------------------------------------------------------------------------*/
 import { Protocol, ServerState } from 'rsp-wtp-client';
 import { DeployableStateNode, RSPProperties, RSPState, ServerStateNode } from '../src/serverExplorer';
-import { RSPType } from 'vscode-server-connector-api';
+import { RSPType } from 'rsp-wtp-server-connector-api';
 
 export class ProtocolStubs {
 

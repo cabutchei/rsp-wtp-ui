@@ -14,7 +14,7 @@ import { DeploymentAssemblyWebview } from './webviews/deploymentAssemblyWebview'
 import { DeployableStateNode, RSPProperties, RSPState, ServerExplorer, ServerStateNode } from './serverExplorer';
 import { Utils } from './utils/utils';
 import * as vscode from 'vscode';
-import { RSPController, ServerInfo } from 'vscode-server-connector-api';
+import { RSPController, ServerInfo } from 'rsp-wtp-server-connector-api';
 import { WorkflowResponseStrategy, WorkflowResponseStrategyManager } from './workflow/response/workflowResponseStrategyManager';
 import { getTelemetryServiceInstance, sendTelemetry } from './telemetry';
 import { JAVA_DEBUG_EXTENSION } from './constants';
@@ -1296,7 +1296,7 @@ export class CommandHandler {
         }
 
         if (!debugInfo.isJavaType()) {
-            return `vscode-rsp-ui doesn't support debugging with ${debugInfo.getType()} language at this time.`;
+            return `rsp-wtp-ui doesn't support debugging with ${debugInfo.getType()} language at this time.`;
         }
         return undefined;
     }
