@@ -4,10 +4,10 @@
  *-----------------------------------------------------------------------------------------------*/
 
 import { DebugInfo } from './debugInfo';
-import { Protocol, RSPClient } from 'rsp-client';
+import { Protocol, RSPWTPClient } from 'rsp-wtp-client';
 
 export class DebugInfoProvider {
-    public static async retrieve(server: Protocol.ServerHandle, client: RSPClient): Promise<DebugInfo> {
+    public static async retrieve(server: Protocol.ServerHandle, client: RSPWTPClient): Promise<DebugInfo> {
         if (!server
                 || !client) {
             return;

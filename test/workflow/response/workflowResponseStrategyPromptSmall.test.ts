@@ -4,7 +4,7 @@
  *-----------------------------------------------------------------------------------------------*/
 import * as chai from 'chai';
 import * as chaipromise from 'chai-as-promised';
-import { Protocol } from 'rsp-client';
+import { Protocol } from 'rsp-wtp-client';
 import { ServerEditorAdapter } from '../../../src/serverEditorAdapter';
 import { ServerExplorer } from '../../../src/serverExplorer';
 import * as sinon from 'sinon';

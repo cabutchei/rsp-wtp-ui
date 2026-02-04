@@ -3,7 +3,7 @@
  *  Licensed under the EPL v2.0 License. See LICENSE file in the project root for license information.
  *-----------------------------------------------------------------------------------------------*/
 
-import { Protocol, RSPClient } from 'rsp-client';
+import { Protocol, RSPWTPClient } from 'rsp-wtp-client';
 import * as vscode from 'vscode';
 import { window } from 'vscode';
 import { myContext } from '../extension';
@@ -16,7 +16,7 @@ export class JavaDebugSession {
 
     private processOutputListener: { port: string, server: Protocol.ServerHandle, listener: ((output: Protocol.ServerProcessOutput) => void)};
 
-    public start(server: Protocol.ServerHandle, port: string, client: RSPClient) {
+    public start(server: Protocol.ServerHandle, port: string, client: RSPWTPClient) {
         this.processOutputListener = {
             port,
             server,

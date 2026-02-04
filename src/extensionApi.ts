@@ -9,7 +9,7 @@ import { initClient } from './rsp/client';
 import { DebugInfo } from './debug/debugInfo';
 import { DebugInfoProvider } from './debug/debugInfoProvider';
 import { JavaDebugSession } from './debug/javaDebugSession';
-import { Protocol, RSPClient, ServerState, StatusSeverity } from 'rsp-client';
+import { Protocol, RSPWTPClient, ServerState, StatusSeverity } from 'rsp-wtp-client';
 import { DeploymentAssemblyWebview } from './webviews/deploymentAssemblyWebview';
 import { DeployableStateNode, RSPProperties, RSPState, ServerExplorer, ServerStateNode } from './serverExplorer';
 import { Utils } from './utils/utils';
@@ -53,7 +53,7 @@ export class CommandHandler {
             return Promise.reject(`The RSP server ${context.type.visibilename} is already running.`);
         }
 
-        const telemetryProps: any = {
+        const telemetryProps = {
             type: context.type.id,
         };
         sendTelemetry('server.startRSP', telemetryProps);
@@ -90,13 +90,13 @@ export class CommandHandler {
             return Promise.reject('No RSP selected');
         }
         const id = context.type.id;
-        const telemetryProps: any = {
+        const telemetryProps = {
             type: id,
         };
         sendTelemetry('server.disconnectRSP', telemetryProps);
 
         //const contextProperties = this.explorer.RSPServersStatus.get(id);
-        const client: RSPClient = this.explorer.getClientByRSP(id);
+        const client: RSPWTPClient = this.explorer.getClientByRSP(id);
         client.disconnect();
         this.explorer.disposeRSPProperties(context.type.id);
         this.explorer.updateRSPServer(context.type.id, ServerState.STOPPED);
@@ -129,7 +129,7 @@ export class CommandHandler {
             this.explorer.updateRSPServer(context.type.id, ServerState.STOPPING);
 
             if (!forced) {
-                const client: RSPClient = this.explorer.getClientByRSP(context.type.id);
+                const client: RSPWTPClient = this.explorer.getClientByRSP(context.type.id);
                 if (!client) {
                     return Promise.reject(`Failed to contact the RSP server ${context.type.visibilename}.`);
                 }
@@ -166,7 +166,7 @@ export class CommandHandler {
             return Promise.reject('The server is already running.');
         }
 
-        const client: RSPClient = this.explorer.getClientByRSP(context.rsp);
+        const client: RSPWTPClient = this.explorer.getClientByRSP(context.rsp);
         if (!client) {
             return Promise.reject('Failed to contact the RSP server.');
         }
@@ -211,7 +211,7 @@ export class CommandHandler {
             || (forced && (serverState === ServerState.STARTING
                             || serverState === ServerState.STOPPING
                             || serverState === ServerState.UNKNOWN))) {
-            const client: RSPClient = this.explorer.getClientByRSP(context.rsp);
+            const client: RSPWTPClient = this.explorer.getClientByRSP(context.rsp);
             if (!client) {
                 return Promise.reject('Failed to contact the RSP server.');
             }
@@ -240,7 +240,7 @@ export class CommandHandler {
             context = this.explorer.getServerStateById(rsp.id, serverId);
         }
 
-        const client: RSPClient = this.explorer.getClientByRSP(context.rsp);
+        const client: RSPWTPClient = this.explorer.getClientByRSP(context.rsp);
         if (!client) {
             return Promise.reject('Failed to contact the RSP server.');
         }
@@ -296,7 +296,7 @@ export class CommandHandler {
         if (status1.state !== ServerState.STOPPED) {
             return Promise.reject(`Stop server ${server.id} before removing it.`);
         }
-        const client: RSPClient = this.explorer.getClientByRSP(rspId);
+        const client: RSPWTPClient = this.explorer.getClientByRSP(rspId);
         if (!client) {
             return Promise.reject('Failed to contact the RSP server.');
         }
@@ -337,7 +337,7 @@ export class CommandHandler {
         };
         sendTelemetry('server.restart', telemetryProps);
 
-        const client: RSPClient = this.explorer.getClientByRSP(context.rsp);
+        const client: RSPWTPClient = this.explorer.getClientByRSP(context.rsp);
         if (!client) {
             return Promise.reject('Failed to contact the RSP server.');
         }
@@ -351,7 +351,7 @@ export class CommandHandler {
         });
     }
 
-    public getRestartListener(mode: string, context: ServerStateNode, client: RSPClient) {
+    public getRestartListener(mode: string, context: ServerStateNode, client: RSPWTPClient) {
         const listener = async (state: Protocol.ServerState): Promise<void> => {
             try {
                 if (state
@@ -469,7 +469,7 @@ export class CommandHandler {
             return Promise.reject('The module is already started.');
         }
 
-        const client: RSPClient = this.explorer.getClientByRSP(context.rsp);
+        const client: RSPWTPClient = this.explorer.getClientByRSP(context.rsp);
         if (!client) {
             return Promise.reject('Failed to contact the RSP server.');
         }
@@ -477,7 +477,7 @@ export class CommandHandler {
             server: context.server,
             deployableReference : context.reference
         };
-        const response = await client.getOutgoingHandler().startModule(req);
+        const response = await client.getOutgoingWTPHandler().startModule(req);
         if (!StatusSeverity.isOk(response)) {
             return Promise.reject(response.message);
         }
@@ -503,10 +503,9 @@ export class CommandHandler {
             context = deployment.deployable;
         }
 
-        const telemetryProps: any = {
+        const telemetryProps = {
             rsp: context.rsp,
             type: context.server.type.id,
-            // module: context.module.id,
         };
         sendTelemetry('server.stopModule', telemetryProps);
 
@@ -518,7 +517,7 @@ export class CommandHandler {
             return Promise.reject('The module is already stopped.');
         }
 
-        const client: RSPClient = this.explorer.getClientByRSP(context.rsp);
+        const client: RSPWTPClient = this.explorer.getClientByRSP(context.rsp);
         if (!client) {
             return Promise.reject('Failed to contact the RSP server.');
         }
@@ -526,7 +525,7 @@ export class CommandHandler {
             server: context.server,
             deployableReference : context.reference
         };
-        const response = await client.getOutgoingHandler().stopModule(req);
+        const response = await client.getOutgoingWTPHandler().stopModule(req);
         if (!StatusSeverity.isOk(response)) {
             return Promise.reject(response.message);
         }
@@ -541,7 +540,7 @@ export class CommandHandler {
             if (!serverId) return null;
             context = this.explorer.getServerStateById(rsp.id, serverId);
         }
-        const isAsync = vscode.workspace.getConfiguration('dev.rsp-ui').get<boolean>('enableAsyncPublish');
+        const isAsync = vscode.workspace.getConfiguration('rsp-wtp-ui').get<boolean>('enableAsyncPublish');
 
         const telemetryProps: any = {
             rspType: context.rsp,
@@ -660,7 +659,7 @@ export class CommandHandler {
             context = this.explorer.getServerStateById(rsp.id, serverId);
         }
 
-        const client: RSPClient = this.explorer.getClientByRSP(context.rsp);
+        const client: RSPWTPClient = this.explorer.getClientByRSP(context.rsp);
         if (!client) {
             return Promise.reject(`Failed to contact the RSP server ${context.rsp}.`);
         }
@@ -684,7 +683,7 @@ export class CommandHandler {
         }
     }
 
-    private async chooseServerActions(server: Protocol.ServerHandle, client: RSPClient): Promise<ServerActionItem> {
+    private async chooseServerActions(server: Protocol.ServerHandle, client: RSPWTPClient): Promise<ServerActionItem> {
         const actionsList: ServerActionItem[] = await client.getOutgoingHandler().listServerActions(server)
             .then((response: Protocol.ListServerActionResponse) => {
                 const entries = (!response || !response.workflows) ? [] : response.workflows;
@@ -711,7 +710,7 @@ export class CommandHandler {
 
     }
 
-    private async executeServerAction(action: ServerActionItem, context: ServerStateNode, client: RSPClient): Promise<Protocol.Status> {
+    private async executeServerAction(action: ServerActionItem, context: ServerStateNode, client: RSPWTPClient): Promise<Protocol.Status> {
         const workflowMap = {};
         const status1 = await this.handleWorkflow(action.actionWorkflow, workflowMap);
         if(!status1) {
@@ -807,7 +806,7 @@ export class CommandHandler {
         };
         const startTime = Date.now();
         try {
-            const client: RSPClient = this.explorer.getClientByRSP(context.rsp);
+            const client: RSPWTPClient = this.explorer.getClientByRSP(context.rsp);
             if (!client) {
                 return Promise.reject(`Failed to contact the RSP server ${context.rsp}.`);
             }
@@ -860,7 +859,7 @@ export class CommandHandler {
     public async runOnServerImpl(context:ServerStateNode, uri:vscode.Uri, mode?: string): Promise<void> {
 
         await this.explorer.addDeployment([uri], context);
-        const isAsync = vscode.workspace.getConfiguration('dev.rsp-ui').get<boolean>('enableAsyncPublish');
+        const isAsync = vscode.workspace.getConfiguration('rsp-wtp-ui').get<boolean>('enableAsyncPublish');
         await this.explorer.publish(context.rsp, context.server, ServerState.PUBLISH_FULL, isAsync);
         if (context.state === ServerState.STOPPED ||
             context.state === ServerState.UNKNOWN) {
@@ -906,13 +905,13 @@ export class CommandHandler {
         }
 
         const rsp = await this.selectRSP('Select RSP provider you want to retrieve deployment assembly');
-        const client: RSPClient = this.explorer.getClientByRSP(rsp.id);
+        const client: RSPWTPClient = this.explorer.getClientByRSP(rsp.id);
         if (!client) {
             return Promise.reject('Failed to contact the RSP server.');
         }
 
         const loadEntries = async (): Promise<Protocol.DeploymentAssemblyEntry[]> => {
-            const response = await client.getOutgoingHandler().getDeploymentAssembly({
+            const response = await client.getOutgoingWTPHandler().getDeploymentAssembly({
                 path: projectUri.fsPath,
                 projectName: projectName,
             });
@@ -956,7 +955,7 @@ export class CommandHandler {
                 if (!deployPath) {
                     return;
                 }
-                const status = await client.getOutgoingHandler().addDeploymentAssemblyEntry({
+                const status = await client.getOutgoingWTPHandler().addDeploymentAssemblyEntry({
                     path: projectUri.fsPath,
                     projectName: projectName,
                     entry: {
@@ -973,7 +972,7 @@ export class CommandHandler {
                 return;
             }
             if (option === 'project') {
-                const projectsResponse = await client.getOutgoingHandler().listDeploymentAssemblyProjects({
+                const projectsResponse = await client.getOutgoingWTPHandler().listDeploymentAssemblyProjects({
                     path: projectUri.fsPath,
                     projectName: projectName,
                 });
@@ -981,7 +980,6 @@ export class CommandHandler {
                     throw new Error(projectsResponse.status.message || 'Failed to list deployment assembly projects.');
                 }
                 const candidates = (projectsResponse.projects || []);
-                    // .filter(p => p && p.name);
                 if (candidates.length === 0) {
                     vscode.window.showInformationMessage('No additional workspace projects are available.');
                     return;
@@ -1000,7 +998,7 @@ export class CommandHandler {
                 if (!deployPath) {
                     return;
                 }
-                const status = await client.getOutgoingHandler().addDeploymentAssemblyEntry({
+                const status = await client.getOutgoingWTPHandler().addDeploymentAssemblyEntry({
                     path: projectUri.fsPath,
                     projectName: projectName,
                     entry: {
@@ -1022,7 +1020,7 @@ export class CommandHandler {
             if (!entry) {
                 return;
             }
-            const status = await client.getOutgoingHandler().removeDeploymentAssemblyEntry({
+            const status = await client.getOutgoingWTPHandler().removeDeploymentAssemblyEntry({
                 path: projectUri.fsPath,
                 projectName: projectName,
                 entry: entry,
@@ -1056,14 +1054,14 @@ export class CommandHandler {
         const vals: RSPProperties[] = Array.from(this.explorer.RSPServersStatus.values());
         const predicateFilter2 = predicateFilter ? predicateFilter : value => value.state.state === ServerState.STARTED;
         const rspProviders = (vals.filter(predicateFilter2) || [])
-        .map(rsp => {
-            const label = (!rsp || !rsp.state || !rsp.state.type) ? "unknown" : rsp.state.type.visibilename ? rsp.state.type.visibilename : rsp.state.type.id;
-            const id = (!rsp || !rsp.state || !rsp.state.type) ? "unknown" : rsp.state.type.id;
-            return {
-                label: label,
-                id: id,
-            };
-        });
+            .map(rsp => {
+                const label = (!rsp || !rsp.state || !rsp.state.type) ? 'unknown' : rsp.state.type.visibilename ? rsp.state.type.visibilename : rsp.state.type.id;
+                const id = (!rsp || !rsp.state || !rsp.state.type) ? 'unknown' : rsp.state.type.id;
+                return {
+                    label: label,
+                    id: id,
+                };
+            });
         if (rspProviders.length < 1) {
             if (vals.length === 0) {
                 return Promise.reject('There are no RSP providers registered.');
@@ -1124,7 +1122,7 @@ export class CommandHandler {
         return vscode.window.showQuickPick(servers.map(server => server.server.id), { placeHolder: message });
     }
 
-    private async initDownloadRuntimeRequest(id: string, data1: {[index: string]: any}, reqId: number, client: RSPClient):
+    private async initDownloadRuntimeRequest(id: string, data1: {[index: string]: any}, reqId: number, client: RSPWTPClient):
         Promise<Protocol.WorkflowResponse> {
         const req: Protocol.DownloadSingleRuntimeRequest = {
             requestId: reqId,
@@ -1136,7 +1134,7 @@ export class CommandHandler {
         return resp;
     }
 
-    private async initEmptyDownloadRuntimeRequest(id: string, client: RSPClient): Promise<Protocol.WorkflowResponse> {
+    private async initEmptyDownloadRuntimeRequest(id: string, client: RSPWTPClient): Promise<Protocol.WorkflowResponse> {
         const req: Protocol.DownloadSingleRuntimeRequest = {
             requestId: null,
             downloadRuntimeId: id,
@@ -1146,7 +1144,7 @@ export class CommandHandler {
         return resp;
     }
 
-    private async promptDownloadableRuntimes(client: RSPClient): Promise<string> {
+    private async promptDownloadableRuntimes(client: RSPWTPClient): Promise<string> {
         const fromRsp: Protocol.ListDownloadRuntimeResponse = await client.getOutgoingHandler().listDownloadableRuntimes(CommandHandler.LIST_RUNTIMES_TIMEOUT);
         const runtimes = fromRsp.runtimes || [];
         const uniquePrefixes = [];
@@ -1239,7 +1237,7 @@ export class CommandHandler {
         try {
             const releasePath = path.join(javaHome, 'release');
             const content = await fs.promises.readFile(releasePath, 'utf8');
-            const match = /JAVA_VERSION=\"([^\"]+)\"/.exec(content);
+            const match = /JAVA_VERSION="([^"]+)"/.exec(content);
             if (!match) {
                 return undefined;
             }
@@ -1253,7 +1251,7 @@ export class CommandHandler {
         if (!version) {
             return undefined;
         }
-        const cleaned = version.trim().replace(/^\"|\"$/g, '');
+        const cleaned = version.trim().replace(/^"|"$/g, '');
         if (cleaned.startsWith('1.')) {
             const parts = cleaned.split('.');
             const major = parseInt(parts[1], 10);
@@ -1305,12 +1303,12 @@ export class CommandHandler {
     private checkDebuggerPresent(): boolean {
         if (this.hasJavaDebugExtension()) {
             getTelemetryServiceInstance().then((x) => {
-                const recommendService: IRecommendationService = RecommendationCore.getService(myContext, x );
-                if( recommendService ) {
+                const recommendService: IRecommendationService = RecommendationCore.getService(myContext, x);
+                if(recommendService) {
                     /*const result: UserChoice | undefined = */
                     recommendService.show(JAVA_DEBUG_EXTENSION, true, undefined, Level.Warn, true);
                     // TODO do something with the result? Store it? Maybe don't show again?
-            }
+                }
             });
             return false;
         }
@@ -1356,7 +1354,7 @@ export class CommandHandler {
             }
         }
         for (const request of vmRequests) {
-            await this.executeJdtlsWorkspaceCommand('org.jboss.tools.rsp.jdtls.createVmInstall', {
+            await this.executeJdtlsWorkspaceCommand('com.github.cabutchei.rsp.jdtls.createVmInstall', {
                 javaHome: request.javaHome,
                 vmName: request.vmName,
             });
@@ -1371,7 +1369,7 @@ export class CommandHandler {
                 continue;
             }
             seenContainers.add(key);
-            await this.executeJdtlsWorkspaceCommand('org.jboss.tools.rsp.jdtls.setJreContainer', {
+            await this.executeJdtlsWorkspaceCommand('com.github.cabutchei.rsp.jdtls.setJreContainer', {
                 projectUri: mapping.projectUri,
                 containerPath: mapping.containerPath,
             });
@@ -1393,7 +1391,7 @@ export class CommandHandler {
         });
     }
 
-    public async activate(rspId: string, client: RSPClient): Promise<void> {
+    public async activate(rspId: string, client: RSPWTPClient): Promise<void> {
         client.getIncomingHandler().onServerAdded(handle => {
             this.explorer.insertServer(rspId, handle);
         });

@@ -24,10 +24,10 @@ import { myContext } from './extension';
 
 import {
     Protocol,
-    RSPClient,
+    RSPWTPClient,
     ServerState,
     StatusSeverity
-} from 'rsp-client';
+} from 'rsp-wtp-client';
 import { ServerEditorAdapter } from './serverEditorAdapter';
 import { Utils } from './utils/utils';
 import { RSPType, ServerInfo } from 'vscode-server-connector-api';
@@ -78,7 +78,7 @@ export interface RSPProperties {
     state: RSPState;
     rspserverstdout: OutputChannel;
     rspserverstderr: OutputChannel;
-    client: RSPClient;
+    client: RSPWTPClient;
     info: ServerInfo;
 }
 
@@ -99,7 +99,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     public nodeSelected: RSPState | ServerStateNode | DeployableStateNode | ModuleStateNode;
 
     private constructor() {
-        this.viewer = window.createTreeView('dev.servers', { treeDataProvider: this });
+        this.viewer = window.createTreeView('com.github.cabutchei.rsp.serversView', { treeDataProvider: this });
         this.viewer.onDidChangeVisibility(this.changeViewer, this);
 
         this.runStateEnum
@@ -127,7 +127,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async initRSPNode(rspId: string) : Promise<void> {
-        const client: RSPClient = this.getClientByRSP(rspId);
+        const client: RSPWTPClient = this.getClientByRSP(rspId);
         if (client) {
             const servers: Protocol.ServerHandle[] = await client.getOutgoingHandler().getServerHandles();
             for (const serverHandle of servers) {
@@ -145,7 +145,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async insertServer(rspId: string, event: Protocol.ServerHandle) : Promise<void>{
-        const client: RSPClient = this.getClientByRSP(rspId);
+        const client: RSPWTPClient = this.getClientByRSP(rspId);
         if (client) {
             const state = await client.getOutgoingHandler().getServerState(event);
             const serverNode: ServerStateNode = this.convertToServerStateNode(rspId, state);
@@ -224,12 +224,12 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     private async fetchModuleStates(rspId: string, server: Protocol.ServerHandle): Promise<ModuleStateNode[] | undefined> {
-        const client: RSPClient = this.getClientByRSP(rspId);
+        const client: RSPWTPClient = this.getClientByRSP(rspId);
         if (!client) {
             return undefined;
         }
         try {
-            const moduleStates = await client.getOutgoingHandler().getModuleStates(server);
+            const moduleStates = await client.getOutgoingWTPHandler().getModuleStates(server);
             return this.convertToModuleStateNodes(rspId, server, moduleStates);
         } catch (err) {
             void err;
@@ -311,11 +311,11 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async selectAndAddDeployment(state: ServerStateNode): Promise<Protocol.Status> {
-        const client: RSPClient = this.getClientByRSP(state.rsp);
+        const client: RSPWTPClient = this.getClientByRSP(state.rsp);
         if (!client) {
             return Promise.reject('Unable to contact the RSP server.');
         }
-        const response = await client.getOutgoingHandler().getDeployableResources(state.server);
+        const response = await client.getOutgoingWTPHandler().getDeployableResources(state.server);
         if (!StatusSeverity.isOk(response.status)) {
             return Promise.reject(response.status.message || 'Failed to list workspace deployables.');
         }
@@ -339,7 +339,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     private async addDeploymentReference(deployable: Protocol.DeployableReference, state: ServerStateNode): Promise<Protocol.Status> {
-        const client: RSPClient = this.RSPServersStatus.get(state.rsp).client;
+        const client: RSPWTPClient = this.RSPServersStatus.get(state.rsp).client;
         if (!client || !deployable) {
             return;
         }
@@ -364,7 +364,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async addDeployment(file: Uri[], state: ServerStateNode): Promise<Protocol.Status> {
-        const client: RSPClient = this.RSPServersStatus.get(state.rsp).client;
+        const client: RSPWTPClient = this.RSPServersStatus.get(state.rsp).client;
         if (client && file && file.length === 1) {
 
             const options = await this.getDeploymentOptions(client, state);
@@ -425,7 +425,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
 
-    private async getDeploymentOptions(client: RSPClient, state: ServerStateNode): Promise<Record<string, unknown>> {
+    private async getDeploymentOptions(client: RSPWTPClient, state: ServerStateNode): Promise<Record<string, unknown>> {
         const answer = await window.showQuickPick(['No', 'Yes'], {placeHolder:
             'Do you want to edit optional deployment parameters?'});
         const options = {};
@@ -452,7 +452,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async removeDeployment(rspId: string, server: Protocol.ServerHandle, deployableRef: Protocol.DeployableReference): Promise<Protocol.Status> {
-        const client: RSPClient = this.getClientByRSP(rspId);
+        const client: RSPWTPClient = this.getClientByRSP(rspId);
         if (!client) {
             return Promise.reject('Unable to contact the RSP server.');
         }
@@ -468,7 +468,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async publish(rspId: string, server: Protocol.ServerHandle, type: number, isAsync: boolean): Promise<Protocol.Status> {
-        const client: RSPClient = this.getClientByRSP(rspId);
+        const client: RSPWTPClient = this.getClientByRSP(rspId);
         if (!client) {
             return Promise.reject('Unable to contact the RSP server.');
         }
@@ -489,7 +489,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         const telemetryProps: any = { rspType: rspId };
         const startTime: number = Date.now();
 
-        const client: RSPClient = this.getClientByRSP(rspId);
+        const client: RSPWTPClient = this.getClientByRSP(rspId);
         if (!client) {
             telemetryProps.duration = Date.now() - startTime;
             telemetryProps.errorMessage = 'Unable to contact the RSP server.';
@@ -525,7 +525,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             throw new Error(`Could not detect any server at ${folders[0].fsPath}!`);
         }
 
-        const useWebviews = workspace.getConfiguration('dev.rsp-ui').get<boolean>('newServerWebviewWorkflow');
+        const useWebviews = workspace.getConfiguration('rsp-wtp-ui').get<boolean>('newServerWebviewWorkflow');
         if(useWebviews) {
             return this.addLocationWizardImplementation(serverBeans[0], rspId, client, telemetryProps, startTime);
         }
@@ -579,7 +579,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async addLocationWizardImplementation(serverBean: Protocol.ServerBean, rspId: string,
-        client: RSPClient, telemetryProps: any, startTime: number): Promise<Protocol.Status | null> {
+        client: RSPWTPClient, telemetryProps: any, startTime: number): Promise<Protocol.Status | null> {
 
         let serverType: Protocol.ServerType = null;
         const serverTypes: Protocol.ServerType[] = await client.getOutgoingHandler().getServerTypes();
@@ -782,7 +782,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async addLocationStepImplementation(serverBean: Protocol.ServerBean, rspId: string,
-        client: RSPClient, telemetryProps: any, startTime: number): Promise<Protocol.Status> {
+        client: RSPWTPClient, telemetryProps: any, startTime: number): Promise<Protocol.Status> {
         const server: { name: string, bean: Protocol.ServerBean } = { name: null, bean: null };
         server.bean = serverBean;
         server.name = await this.getServerName(rspId);
@@ -804,7 +804,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async editServer(rspId: string, server: Protocol.ServerHandle): Promise<void> {
-        const client: RSPClient = this.getClientByRSP(rspId);
+        const client: RSPWTPClient = this.getClientByRSP(rspId);
         if (!client) {
             return Promise.reject(`Unable to contact the RSP server ${rspId}.`);
         }
@@ -824,7 +824,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         if (!content) {
             return Promise.reject(`Unable to update server properties for server ${serverhandle.id} - Invalid content`);
         }
-        const client: RSPClient = this.getClientByRSP(rspId);
+        const client: RSPWTPClient = this.getClientByRSP(rspId);
         if (!client) {
             return Promise.reject('Unable to contact the RSP server.');
         }
@@ -839,7 +839,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         return response;
     }
 
-    private async createServer(bean: Protocol.ServerBean, name: string, attributes: any = {}, client: RSPClient): Promise<Protocol.Status> {
+    private async createServer(bean: Protocol.ServerBean, name: string, attributes: any = {}, client: RSPWTPClient): Promise<Protocol.Status> {
         if (!bean || !name) {
             return Promise.reject('Couldn\'t create server: no type or name provided.');
         }
@@ -851,14 +851,14 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     private async createServerFullResponse(bean: Protocol.ServerBean, name: string,
-        attributes: any = {}, client: RSPClient): Promise<Protocol.CreateServerResponse> {
+        attributes: any = {}, client: RSPWTPClient): Promise<Protocol.CreateServerResponse> {
         if (!bean || !name) {
             return Promise.reject('Couldn\'t create server: no type or name provided.');
         }
         return await client.getServerCreation().createServerFromBeanAsync(bean, name, attributes);
     }
 
-    public getClientByRSP(rspId: string): RSPClient {
+    public getClientByRSP(rspId: string): RSPWTPClient {
         if (!this.RSPServersStatus.has(rspId)) {
             return undefined;
         }
@@ -920,7 +920,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     /**
      * Requests parameters for the given server and lets user fill the required ones
      */
-    private async getRequiredParameters(bean: Protocol.ServerBean, client: RSPClient): Promise<Record<string, unknown>> {
+    private async getRequiredParameters(bean: Protocol.ServerBean, client: RSPWTPClient): Promise<Record<string, unknown>> {
         let serverAttribute: {required: Protocol.Attributes; optional: Protocol.Attributes};
 
         if (this.serverAttributes.has(bean.serverAdapterTypeId)) {
@@ -1012,7 +1012,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
                 contextValue: serverState,
                 collapsibleState: TreeItemCollapsibleState.Expanded,
                 command: {
-                    command: 'dev.server.saveSelectedNode',
+                    command: 'wtp.server.saveSelectedNode',
                     title: '',
                     tooltip: '',
                     arguments: [ state ]

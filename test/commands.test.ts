@@ -12,7 +12,7 @@ import { EventEmitter } from 'events';
 import { CommandHandler, ServerActionItem } from '../src/extensionApi';
 import { JavaDebugSession } from '../src/debug/javaDebugSession';
 import { ProtocolStubs } from './protocolstubs';
-import { Protocol, ServerState } from 'rsp-client';
+import { Protocol, ServerState } from 'rsp-wtp-client';
 import { ServerEditorAdapter } from '../src/serverEditorAdapter';
 import { ServerExplorer, ServerStateNode } from '../src/serverExplorer';
 import * as sinon from 'sinon';

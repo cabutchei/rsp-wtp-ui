@@ -1,4 +1,4 @@
-import { Protocol } from 'rsp-client';
+import { Protocol } from 'rsp-wtp-client';
 import { ServerEditorAdapter } from '../../serverEditorAdapter';
 import { ServerExplorer } from '../../serverExplorer';
 import { Utils } from '../../utils/utils';

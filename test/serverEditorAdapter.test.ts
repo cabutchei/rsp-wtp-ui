@@ -7,7 +7,7 @@ import * as chaipromise from 'chai-as-promised';
 import { ClientStubs } from './clientstubs';
 import * as fs from 'fs';
 import { ProtocolStubs } from './protocolstubs';
-import { Protocol } from 'rsp-client';
+import { Protocol } from 'rsp-wtp-client';
 import { ServerEditorAdapter, ServerProperties } from '../src/serverEditorAdapter';
 import { ServerExplorer } from '../src/serverExplorer';
 import * as sinon from 'sinon';

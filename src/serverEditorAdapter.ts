@@ -5,7 +5,7 @@
 
 'use strict';
 import * as fs from 'fs';
-import { Protocol } from 'rsp-client';
+import { Protocol } from 'rsp-wtp-client';
 import { ServerExplorer } from './serverExplorer';
 import * as tmp from 'tmp';
 import * as vscode from 'vscode';

@@ -2,7 +2,7 @@
  *  Copyright (c) Red Hat, Inc. All rights reserved.
  *  Licensed under the EPL v2.0 License. See LICENSE file in the project root for license information.
  *-----------------------------------------------------------------------------------------------*/
-import { Protocol, ServerState } from 'rsp-client';
+import { Protocol, ServerState } from 'rsp-wtp-client';
 import { DeployableStateNode, RSPProperties, RSPState, ServerStateNode } from '../src/serverExplorer';
 import { RSPType } from 'vscode-server-connector-api';
 

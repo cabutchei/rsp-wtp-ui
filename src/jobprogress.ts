@@ -2,7 +2,7 @@
  *  Copyright (c) Red Hat, Inc. All rights reserved.
  *  Licensed under the EPL v2.0 License. See LICENSE file in the project root for license information.
  *-----------------------------------------------------------------------------------------------*/
-import { Protocol, RSPClient, StatusSeverity } from 'rsp-client';
+import { Protocol, RSPWTPClient, StatusSeverity } from 'rsp-wtp-client';
 import * as vscode from 'vscode';
 
 export class JobProgress {
@@ -10,7 +10,7 @@ export class JobProgress {
     private static readonly JOB_TIMEOUT: number = 1000 * 60 * 10; // 10 minutes
 
     private readonly job: Protocol.JobHandle;
-    private readonly client: RSPClient;
+    private readonly client: RSPWTPClient;
     private readonly progress: vscode.Progress<{ message?: string, increment?: number }>;
     private readonly cancellation: vscode.CancellationToken;
     private readonly reject: (reason?: any) => void;
@@ -18,7 +18,7 @@ export class JobProgress {
     private timeoutId: NodeJS.Timeout;
     private percents = 0;
 
-    public static create(client: RSPClient) {
+    public static create(client: RSPWTPClient) {
         client.getIncomingHandler().onJobAdded((jobHandle: Protocol.JobHandle) => {
             vscode.window.withProgress(
                 {
@@ -40,7 +40,7 @@ export class JobProgress {
     }
 
     private constructor(job: Protocol.JobHandle,
-        client: RSPClient,
+        client: RSPWTPClient,
         progress: vscode.Progress<{ message?: string, increment?: number }>,
         cancellation: vscode.CancellationToken,
         reject: (reason?: any) => void,

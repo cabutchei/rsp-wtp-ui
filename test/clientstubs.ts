@@ -2,19 +2,20 @@
  *  Copyright (c) Red Hat, Inc. All rights reserved.
  *  Licensed under the EPL v2.0 License. See LICENSE file in the project root for license information.
  *-----------------------------------------------------------------------------------------------*/
-import { Incoming, Outgoing, OutgoingSynchronous, RSPClient, ServerCreation } from 'rsp-client';
+import { Incoming, Outgoing, OutgoingSynchronous, OutgoingWTP, RSPWTPClient, ServerCreation } from 'rsp-wtp-client';
 
 export class ClientStubs {
 
-    public clientStub: sinon.SinonStubbedInstance<RSPClient>;
-    public get client(): RSPClient { return this.clientStub as unknown as RSPClient; }
+    public clientStub: sinon.SinonStubbedInstance<RSPWTPClient>;
+    public get client(): RSPWTPClient { return this.clientStub as unknown as RSPWTPClient; }
     public incoming: sinon.SinonStubbedInstance<Incoming>;
     public outgoing: sinon.SinonStubbedInstance<Outgoing>;
+    public outgoingWTP: sinon.SinonStubbedInstance<OutgoingWTP>;
     public outgoingSync: sinon.SinonStubbedInstance<OutgoingSynchronous>;
     public serverCreation: sinon.SinonStubbedInstance<ServerCreation>;
 
     constructor(sandbox: sinon.SinonSandbox) {
-        this.clientStub = sandbox.stub(RSPClient.prototype);
+        this.clientStub = sandbox.stub(RSPWTPClient.prototype);
         this.clientStub.connect.resolves();
 
         this.outgoing = sandbox.createStubInstance(Outgoing);

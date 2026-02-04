@@ -1,4 +1,4 @@
-import { Protocol } from 'rsp-client';
+import { Protocol } from 'rsp-wtp-client';
 import * as vscode from 'vscode';
 import { RSPController } from 'vscode-server-connector-api';
 

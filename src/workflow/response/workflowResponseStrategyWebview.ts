@@ -1,4 +1,4 @@
-import { Protocol } from 'rsp-client';
+import { Protocol } from 'rsp-wtp-client';
 import { myContext } from '../../extension';
 import { WebSphereJvmPropertiesWebview } from '../../webviews/websphereJvmPropertiesWebview';
 

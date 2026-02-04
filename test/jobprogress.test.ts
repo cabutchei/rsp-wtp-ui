@@ -8,7 +8,7 @@ import * as chai from 'chai';
 import * as chaipromise from 'chai-as-promised';
 import { ClientStubs } from './clientstubs';
 import { JobProgress } from '../src/jobprogress';
-import { Protocol } from 'rsp-client';
+import { Protocol } from 'rsp-wtp-client';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import * as vscode from 'vscode';

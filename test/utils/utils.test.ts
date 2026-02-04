@@ -9,7 +9,7 @@ import * as sinonChai from 'sinon-chai';
 import { Utils } from '../../src/utils/utils';
 import * as vscode from 'vscode';
 import { RSPController } from 'vscode-server-connector-api';
-import { Protocol } from 'rsp-client';
+import { Protocol } from 'rsp-wtp-client';
 
 const expect = chai.expect;
 chai.use(sinonChai);

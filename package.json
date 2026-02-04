@@ -1,17 +1,17 @@
 {
-	"name": "cabutchei-rsp-ui",
-	"displayName": "Runtime Server Protocol UI - WTP edition",
-	"description": "Provides a unified UI to interact with runtimes and servers managed over the RSP protocol.",
-	"version": "0.24.12",
+	"name": "rsp-wtp-ui",
+	"displayName": "RSP-WTP UI",
+	"description": "Provides a unified UI to interact with runtimes and servers managed over the RSP-WTP protocol.",
+	"version": "0.1.0",
 	"license": "SEE LICENSE IN LICENSE",
 	"publisher": "cabutchei",
 	"author": "cabutchei",
 	"preview": true,
 	"repository": {
 		"type": "git",
-		"url": "https://github.com/cabutchei/vscode-rsp-ui.git"
+		"url": "https://github.com/cabutchei/rsp-wtp-ui.git"
 	},
-	"bugs": "https://github.com/cabutchei/vscode-rsp-ui/issues",
+	"bugs": "https://github.com/cabutchei/rsp-wtp-ui/issues",
 	"engines": {
 		"vscode": "^1.54.0"
 	},
@@ -26,332 +26,332 @@
 	],
 	"icon": "images/rsp_ui_icon.png",
 	"activationEvents": [
-		"onCommand:dev.server.createServer",
-		"onCommand:dev.server.addLocation",
-		"onCommand:dev.server.downloadRuntime",
-		"onCommand:dev.server.startRSP",
-		"onCommand:dev.server.disconnectRSP",
-		"onCommand:dev.server.stopRSP",
-		"onCommand:dev.server.terminateRSP",
-		"onCommand:dev.server.start",
-		"onCommand:dev.server.debug",
-		"onCommand:dev.server.stop",
-		"onCommand:dev.server.terminate",
-		"onCommand:dev.server.restart",
-		"onCommand:dev.server.restartDebug",
-		"onCommand:dev.server.remove",
-		"onCommand:dev.server.output",
-		"onCommand:dev.server.add",
-		"onCommand:dev.server.publishFull",
-		"onCommand:dev.server.publishIncremental",
-		"onCommand:dev.server.startModule",
-		"onCommand:dev.server.stopModule",
-		"onCommand:dev.server.actions",
-		"onCommand:dev.server.syncJavaRuntime",
-		"onCommand:dev.server.deploymentAssembly",
-		"onView:dev.servers",
+		"onCommand:wtp.server.createServer",
+		"onCommand:wtp.server.addLocation",
+		"onCommand:wtp.server.downloadRuntime",
+		"onCommand:wtp.server.startRSP",
+		"onCommand:wtp.server.disconnectRSP",
+		"onCommand:wtp.server.stopRSP",
+		"onCommand:wtp.server.terminateRSP",
+		"onCommand:wtp.server.start",
+		"onCommand:wtp.server.debug",
+		"onCommand:wtp.server.stop",
+		"onCommand:wtp.server.terminate",
+		"onCommand:wtp.server.restart",
+		"onCommand:wtp.server.restartDebug",
+		"onCommand:wtp.server.remove",
+		"onCommand:wtp.server.output",
+		"onCommand:wtp.server.add",
+		"onCommand:wtp.server.publishFull",
+		"onCommand:wtp.server.publishIncremental",
+		"onCommand:wtp.server.startModule",
+		"onCommand:wtp.server.stopModule",
+		"onCommand:wtp.server.actions",
+		"onCommand:wtp.server.syncJavaRuntime",
+		"onCommand:wtp.server.deploymentAssembly",
+		"onView:com.github.cabutchei.rsp.serversView",
 		"onLanguage:plaintext"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
 		"commands": [
 			{
-				"command": "dev.server.createServer",
-				"title": "Dev: Create New Server...",
+				"command": "wtp.server.createServer",
+				"title": "Create New Server...",
 				"icon": "resources/dark/new-server.svg",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.addLocation",
-				"title": "Dev: Add Local Server...",
+				"command": "wtp.server.addLocation",
+				"title": "Add Local Server...",
 				"icon": "resources/dark/add-location.svg",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.downloadRuntime",
-				"title": "Dev: Download Server...",
+				"command": "wtp.server.downloadRuntime",
+				"title": "Download Server...",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.startRSP",
-				"title": "Dev: Start / Connect to RSP Provider",
+				"command": "wtp.server.startRSP",
+				"title": "Start / Connect to RSP Provider",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.disconnectRSP",
-				"title": "Dev: Disconnect from RSP Provider",
+				"command": "wtp.server.disconnectRSP",
+				"title": "Disconnect from RSP Provider",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.stopRSP",
-				"title": "Dev: Stop RSP Provider",
+				"command": "wtp.server.stopRSP",
+				"title": "Stop RSP Provider",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.terminateRSP",
-				"title": "Dev: Terminate RSP Provider",
+				"command": "wtp.server.terminateRSP",
+				"title": "Terminate RSP Provider",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.start",
-				"title": "Dev: Start Server",
+				"command": "wtp.server.start",
+				"title": "Start Server",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.debug",
-				"title": "Dev: Debug Server",
+				"command": "wtp.server.debug",
+				"title": "Debug Server",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.stop",
-				"title": "Dev: Stop Server",
+				"command": "wtp.server.stop",
+				"title": "Stop Server",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.terminate",
-				"title": "Dev: Terminate Server",
+				"command": "wtp.server.terminate",
+				"title": "Terminate Server",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.restart",
-				"title": "Dev: Restart in Run Mode",
+				"command": "wtp.server.restart",
+				"title": "Restart in Run Mode",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.restartDebug",
-				"title": "Dev: Restart in Debug Mode",
+				"command": "wtp.server.restartDebug",
+				"title": "Restart in Debug Mode",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.remove",
-				"title": "Dev: Remove Server",
+				"command": "wtp.server.remove",
+				"title": "Remove Server",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.output",
-				"title": "Dev: Show Output Channel",
+				"command": "wtp.server.output",
+				"title": "Show Output Channel",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.addDeployment",
-				"title": "Dev: Add Deployment",
+				"command": "wtp.server.addDeployment",
+				"title": "Add Deployment",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.removeDeployment",
-				"title": "Dev: Remove Deployment",
+				"command": "wtp.server.removeDeployment",
+				"title": "Remove Deployment",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.startModule",
-				"title": "Dev: Start Module",
+				"command": "wtp.server.startModule",
+				"title": "Start Module",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.stopModule",
-				"title": "Dev: Stop Module",
+				"command": "wtp.server.stopModule",
+				"title": "Stop Module",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.publishIncremental",
-				"title": "Dev: Publish Server (Incremental)",
+				"command": "wtp.server.publishIncremental",
+				"title": "Publish Server (Incremental)",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.publishFull",
-				"title": "Dev: Publish Server (Full)",
+				"command": "wtp.server.publishFull",
+				"title": "Publish Server (Full)",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.actions",
-				"title": "Dev: Server Actions...",
+				"command": "wtp.server.actions",
+				"title": "Server Actions...",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.deploymentAssembly",
-				"title": "Dev: Deployment Assembly",
+				"command": "wtp.server.deploymentAssembly",
+				"title": "Deployment Assembly",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.editServer",
-				"title": "Dev: Edit Server",
+				"command": "wtp.server.editServer",
+				"title": "Edit Server",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.syncJavaRuntime",
-				"title": "Dev: Sync Java Runtime",
+				"command": "wtp.server.syncJavaRuntime",
+				"title": "Sync Java Runtime",
 				"category": "Servers"
 			},
 			{
-				"command": "dev.server.application.run",
-				"title": "Dev: Run on Server",
+				"command": "wtp.server.application.run",
+				"title": "Run on Server",
 				"category": "Application"
 			},
 			{
-				"command": "dev.server.application.debug",
-				"title": "Dev: Debug on Server",
+				"command": "wtp.server.application.debug",
+				"title": "Debug on Server",
 				"category": "Application"
 			}
 		],
 		"views": {
 			"explorer": [
 				{
-					"id": "dev.servers",
-					"name": "Dev Servers"
+					"id": "com.github.cabutchei.rsp.serversView",
+					"name": "WTP Servers"
 				}
 			]
 		},
 		"menus": {
 			"view/title": [
 				{
-					"command": "dev.server.createServer",
-					"when": "view == dev.servers",
+					"command": "wtp.server.createServer",
+					"when": "view == com.github.cabutchei.rsp.serversView",
 					"group": "navigation"
 				}
 			],
 			"commandPalette": [
 				{
-					"command": "dev.server.application.run",
+					"command": "wtp.server.application.run",
 					"when": "never"
 				},
 				{
-					"command": "dev.server.application.debug",
+					"command": "wtp.server.application.debug",
 					"when": "never"
 				}
 			],
 			"view/item/context": [
 				{
-					"command": "dev.server.startRSP",
-					"when": "view == dev.servers && viewItem =~ /^(RSPUnknown|RSPStopped)/",
+					"command": "wtp.server.startRSP",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(RSPUnknown|RSPStopped)/",
 					"group": "0_server-rspstartstop@1"
 				},
 				{
-					"command": "dev.server.disconnectRSP",
-					"when": "view == dev.servers && viewItem =~ /^(RSPConnected)/",
+					"command": "wtp.server.disconnectRSP",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(RSPConnected)/",
 					"group": "0_server-rspstartstop@2"
 				},
 				{
-					"command": "dev.server.stopRSP",
-					"when": "view == dev.servers && viewItem =~ /^(RSPStarted|RSPConnected)/",
+					"command": "wtp.server.stopRSP",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(RSPStarted|RSPConnected)/",
 					"group": "0_server-rspstartstop@2"
 				},
 				{
-					"command": "dev.server.terminateRSP",
-					"when": "view == dev.servers && viewItem =~ /^(RSPStarted|RSPStarting|RSPStopping)/",
+					"command": "wtp.server.terminateRSP",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(RSPStarted|RSPStarting|RSPStopping)/",
 					"group": "0_server-rspstartstop@2"
 				},
 				{
-					"command": "dev.server.createServer",
-					"when": "view == dev.servers && viewItem =~ /^(RSPStarted|RSPConnected)/",
+					"command": "wtp.server.createServer",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(RSPStarted|RSPConnected)/",
 					"group": "0_server-rspstartstop@3"
 				},
 				{
-					"command": "dev.server.start",
-					"when": "view == dev.servers && viewItem =~ /^(Stopped|Unknown)/",
+					"command": "wtp.server.start",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Stopped|Unknown)/",
 					"group": "1_server-startstop@1"
 				},
 				{
-					"command": "dev.server.debug",
-					"when": "view == dev.servers && viewItem =~ /^Stopped/",
+					"command": "wtp.server.debug",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^Stopped/",
 					"group": "1_server-startstop@2"
 				},
 				{
-					"command": "dev.server.stop",
-					"when": "view == dev.servers && viewItem =~ /^(Started|Debugging|Unknown)/",
+					"command": "wtp.server.stop",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Started|Debugging|Unknown)/",
 					"group": "1_server-startstop@3"
 				},
 				{
-					"command": "dev.server.restart",
-					"when": "view == dev.servers && viewItem =~ /^(Started|Debugging)/",
+					"command": "wtp.server.restart",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Started|Debugging)/",
 					"group": "1_server-startstop@4"
 				},
 				{
-					"command": "dev.server.restartDebug",
-					"when": "view == dev.servers && viewItem =~ /^(Started|Debugging)/",
+					"command": "wtp.server.restartDebug",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Started|Debugging)/",
 					"group": "1_server-startstop@5"
 				},
 				{
-					"command": "dev.server.terminate",
-					"when": "view == dev.servers && viewItem =~ /^(Starting|Stopping|Started|Stopped|Unknown)/",
+					"command": "wtp.server.terminate",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Starting|Stopping|Started|Stopped|Unknown)/",
 					"group": "1_server-startstop@6"
 				},
 				{
-					"command": "dev.server.remove",
-					"when": "view == dev.servers && viewItem =~ /^(Stopped|Unknown)/",
+					"command": "wtp.server.remove",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Stopped|Unknown)/",
 					"group": "2_server-remove@1"
 				},
 				{
-					"command": "dev.server.publishIncremental",
-					"when": "view == dev.servers && viewItem =~ /^(Deployable)?(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"command": "wtp.server.publishIncremental",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Deployable)?(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "3_server-deployments@6"
 				},
 				{
-					"command": "dev.server.publishFull",
-					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"command": "wtp.server.publishFull",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "3_server-deployments@7"
 				},
 				{
-					"command": "dev.server.addDeployment",
-					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|^Unknown)/",
+					"command": "wtp.server.addDeployment",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|^Unknown)/",
 					"group": "3_server-deployments@1"
 				},
 				{
-					"command": "dev.server.removeDeployment",
-					"when": "view == dev.servers && viewItem =~ /\\s(Synchronized|[+|-|Full]* Publish|Unknown)/",
+					"command": "wtp.server.removeDeployment",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /\\s(Synchronized|[+|-|Full]* Publish|Unknown)/",
 					"group": "3_server-deployments@2"
 				},
 				{
-					"command": "dev.server.startModule",
-					"when": "view == dev.servers && viewItem =~ /^Deployable(Stopped)/",
+					"command": "wtp.server.startModule",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^Deployable(Stopped)/",
 					"group": "3_server-modules@1"
 				},
 				{
-					"command": "dev.server.stopModule",
-					"when": "view == dev.servers && viewItem =~ /^Deployable(Started|Starting)/",
+					"command": "wtp.server.stopModule",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^Deployable(Started|Starting)/",
 					"group": "3_server-modules@2"
 				},
 				{
-					"command": "dev.server.output",
-					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped)/",
+					"command": "wtp.server.output",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped)/",
 					"group": "4_server-status@1"
 				},
 				{
-					"command": "dev.server.downloadRuntime",
-					"when": "view == dev.servers && !viewItem",
+					"command": "wtp.server.downloadRuntime",
+					"when": "view == com.github.cabutchei.rsp.serversView && !viewItem",
 					"group": "5_rsp@1"
 				},
 				{
-					"command": "dev.server.addLocation",
-					"when": "view == dev.servers && !viewItem",
+					"command": "wtp.server.addLocation",
+					"when": "view == com.github.cabutchei.rsp.serversView && !viewItem",
 					"group": "5_rsp@2"
 				},
 				{
-					"command": "dev.server.actions",
-					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"command": "wtp.server.actions",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "6_server-info@1"
 				},
 				{
-					"command": "dev.server.editServer",
-					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"command": "wtp.server.editServer",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "6_server-info@2"
 				},
 				{
-					"command": "dev.server.syncJavaRuntime",
-					"when": "view == dev.servers && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"command": "wtp.server.syncJavaRuntime",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "6_server-info@3"
 				}
 			],
 			"explorer/context": [
 				{
-					"command": "dev.server.application.run",
+					"command": "wtp.server.application.run",
 					"group": "1_server-application@1"
 				},
 				{
-					"command": "dev.server.application.debug",
+					"command": "wtp.server.application.debug",
 					"group": "1_server-application@2"
 				},
 				{
-					"command": "dev.server.deploymentAssembly",
+					"command": "wtp.server.deploymentAssembly",
 					"when": "explorerResourceIsFolder",
 					"group": "1_server-application@3"
 				}
@@ -361,7 +361,7 @@
 			"type": "object",
 			"title": "Servers View",
 			"properties": {
-				"dev.rsp-ui.rsp.java.home": {
+				"rsp-wtp-ui.rsp.java.home": {
 					"type": [
 						"string",
 						"null"
@@ -381,18 +381,18 @@
 					"default": true,
 					"description": "Show Server's output channel when new text added to output stream."
 				},
-				"dev.rsp-ui.newServerWebviewWorkflow": {
+				"rsp-wtp-ui.newServerWebviewWorkflow": {
 					"type": "boolean",
 					"default": true,
 					"title": "Use webviews when creating a new server",
 					"description": "If true, use the webviews workflow when creating a new server. If false, use a series of prompts."
 				},
-				"dev.rsp-ui.enableAsyncPublish": {
+				"rsp-wtp-ui.enableAsyncPublish": {
 					"type": "boolean",
 					"default": false,
 					"description": "Enable asynchronous publishing."
 				},
-				"dev.rsp-ui.enableStartServerOnActivation": {
+				"rsp-wtp-ui.enableStartServerOnActivation": {
 					"type": "array",
 					"items": {
 						"type": "object",
@@ -460,7 +460,7 @@
 		"path": "0.12.7",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
-		"rsp-client": "^0.25.0",
+		"rsp-wtp-client": "0.1.0",
 		"tmp": "^0.2.1",
 		"vscode-server-connector-api": "0.1.7"
 	},

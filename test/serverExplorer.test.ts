@@ -7,12 +7,12 @@
 import * as chai from 'chai';
 import { ClientStubs } from './clientstubs';
 import { ProtocolStubs } from './protocolstubs';
-import { Protocol, ServerState } from 'rsp-client';
+import { Protocol, ServerState } from 'rsp-wtp-client';
 import { RSPProperties, RSPState, ServerExplorer, ServerStateNode } from '../src/serverExplorer';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
 import { Utils } from '../src/utils/utils';
-import { EventEmitter, OpenDialogOptions, OutputChannel, TreeItemCollapsibleState, Uri, window } from 'vscode';
+import { EventEmitter, OutputChannel, TreeItemCollapsibleState, Uri, window } from 'vscode';
 
 const expect = chai.expect;
 chai.use(sinonChai);
@@ -230,7 +230,7 @@ suite('Server explorer', () => {
             contextValue: 'Stopped',
             iconPath: iconPath,
             command: {
-                command: 'dev.server.saveSelectedNode',
+                command: 'wtp.server.saveSelectedNode',
                 title: '',
                 tooltip: '',
                 arguments: [ ProtocolStubs.unknownServerState ]
@@ -245,7 +245,7 @@ suite('Server explorer', () => {
             contextValue: 'Started',
             iconPath: iconPath,
             command: {
-                command: 'dev.server.saveSelectedNode',
+                command: 'wtp.server.saveSelectedNode',
                 title: '',
                 tooltip: '',
                 arguments: [ ProtocolStubs.unknownServerState ]
@@ -260,7 +260,7 @@ suite('Server explorer', () => {
             contextValue: 'Debugging',
             iconPath: iconPath,
             command: {
-                command: 'dev.server.saveSelectedNode',
+                command: 'wtp.server.saveSelectedNode',
                 title: '',
                 tooltip: '',
                 arguments: [ ProtocolStubs.serverDebuggingState ]
@@ -275,7 +275,7 @@ suite('Server explorer', () => {
             contextValue: 'Unknown',
             iconPath: iconPath,
             command: {
-                command: 'dev.server.saveSelectedNode',
+                command: 'wtp.server.saveSelectedNode',
                 title: '',
                 tooltip: '',
                 arguments: [ ProtocolStubs.unknownServerState ]
@@ -511,24 +511,6 @@ suite('Server explorer', () => {
     });
 
     suite('addDeployment', () => {
-        enum FilePickerType {
-            FILE = 'FILE',
-            FOLDER = 'FOLDER',
-            BOTH = 'BOTH'
-        }
-
-        const userSelectedPath: Uri = { 
-            fsPath: 'path/path',
-            authority: 'authority',
-            fragment: 'fragment',
-            path: 'path/path',
-            query: 'query',
-            scheme: 'scheme',
-            toJSON: () => { /* do nothing */ },
-            toString: () => '',
-            with: undefined
-        };
-
         const rspProperties: RSPProperties = {
             client: undefined,
             rspserverstderr: undefined,
@@ -537,129 +519,54 @@ suite('Server explorer', () => {
             info: undefined
         };
 
+        const deployable: Protocol.DeployableReference = {
+            label: 'my-project',
+            path: '/path/to/project'
+        };
+
         setup(() => {
             serverExplorer.RSPServersStatus.set('id', rspProperties);
             sandbox.stub(serverExplorer, 'getClientByRSP').returns(stubs.client);
         });
 
-        test('check dialog options are set up correctly when choosing file in Windows', async () => {
-            Object.defineProperty(process, 'platform', {
-                value: 'win32'
-            });
-            sandbox.stub(serverExplorer, 'quickPickDeploymentType' as any).resolves(FilePickerType.FILE);
-
-            const filePickerResponseWindows = {
-                canSelectFiles: true,
-                canSelectMany: false,
-                canSelectFolders: false,
-                openLabel: 'Select File Deployment'
-            };
-            const stubDialog = sandbox.stub(window, 'showOpenDialog');
-            await serverExplorer.selectAndAddDeployment(ProtocolStubs.startedServerState);
-
-            const filePickerResult = stubDialog.getCall(0).args[0];
-            filePickerResult.defaultUri = undefined;
-            expect(JSON.stringify(filePickerResult)).equals(JSON.stringify(filePickerResponseWindows));
-        });
-
-        test('check dialog options are set up correctly when choosing folder in Windows', async () => {
-            Object.defineProperty(process, 'platform', {
-                value: 'win32'
-            });
-            sandbox.stub(serverExplorer, 'quickPickDeploymentType' as any).resolves(FilePickerType.FOLDER);
-
-            const folderPickerResponseWindows = {
-                canSelectFiles: false,
-                canSelectMany: false,
-                canSelectFolders: true,
-                openLabel: 'Select Exploded Deployment'
-            };
-            const stubDialog = sandbox.stub(window, 'showOpenDialog');
-            await serverExplorer.selectAndAddDeployment(ProtocolStubs.startedServerState);
-
-            const folderPickerResult = stubDialog.getCall(0).args[0];
-            folderPickerResult.defaultUri = undefined;
-            expect(JSON.stringify(folderPickerResult)).equals(JSON.stringify(folderPickerResponseWindows));
-        });
-
-        test('check dialog options are set up correctly when choosing file in Linux', async () => {
-            Object.defineProperty(process, 'platform', {
-                value: 'linux'
-            });
-            sandbox.stub(serverExplorer, 'quickPickDeploymentType' as any).resolves(FilePickerType.FILE);
-
-            const filePickerResponseLinux = {
-                canSelectFiles: true,
-                canSelectMany: false,
-                canSelectFolders: false,
-                openLabel: 'Select File Deployment'
-            };
-            const stubDialog = sandbox.stub(window, 'showOpenDialog');
-            await serverExplorer.selectAndAddDeployment(ProtocolStubs.startedServerState);
-
-            const filePickerResult = stubDialog.getCall(0).args[0];
-            filePickerResult.defaultUri = undefined;
-            expect(JSON.stringify(filePickerResult)).equals(JSON.stringify(filePickerResponseLinux));
-        });
-
-        test('check dialog options are set up correctly when choosing folder in Linux', async () => {
-            Object.defineProperty(process, 'platform', {
-                value: 'linux'
-            });
-            sandbox.stub(serverExplorer, 'quickPickDeploymentType' as any).resolves(FilePickerType.FOLDER);
-
-            const folderPickerResponseLinux: OpenDialogOptions = {
-                canSelectFiles: false,
-                canSelectMany: false,
-                canSelectFolders: true,
-                openLabel: 'Select Exploded Deployment'
-            };
-            const stubDialog = sandbox.stub(window, 'showOpenDialog');
-            await serverExplorer.selectAndAddDeployment(ProtocolStubs.startedServerState);
-
-            const folderPickerResult = stubDialog.getCall(0).args[0];
-            folderPickerResult.defaultUri = undefined;
-            expect(JSON.stringify(folderPickerResult)).equals(JSON.stringify(folderPickerResponseLinux));
-        });
-
-        test('check dialog options are set up correctly when opening dialog with different OSes (like MAC OS)', async () => {
-            Object.defineProperty(process, 'platform', {
-                value: 'darwin'
-            });
-            sandbox.stub(serverExplorer, 'quickPickDeploymentType' as any).resolves(FilePickerType.BOTH);
-
-            const pickerResponseDialog: OpenDialogOptions = {
-                canSelectFiles: true,
-                canSelectMany: false,
-                canSelectFolders: true,
-                openLabel: 'Select file or exploded Deployment'
-            };
-            const stubDialog = sandbox.stub(window, 'showOpenDialog');
-            await serverExplorer.selectAndAddDeployment(ProtocolStubs.startedServerState);
-
-            const pickerResult = stubDialog.getCall(0).args[0];
-            pickerResult.defaultUri = undefined;
-            expect(JSON.stringify(pickerResult)).equals(JSON.stringify(pickerResponseDialog));
-        });
-
-        test('check nothing is made if os picker is closed without choosing', async () => {
-            sandbox.stub(serverExplorer, 'quickPickDeploymentType' as any).resolves(undefined);
-            const openDialogStub = sandbox.stub(window, 'showOpenDialog');
+        test('shows workspace deployables and adds selected deployment', async () => {
+            stubs.outgoingWTP.getDeployableResources = sandbox
+                .stub<[Protocol.ServerHandle, number], Promise<Protocol.ListDeployableResourcesResponse>>()
+                .resolves({ resources: [deployable], status: ProtocolStubs.okStatus });
+            const addDeployableStub = stubs.outgoing.addDeployable = sandbox
+                .stub<[Protocol.ServerDeployableReference, number], Promise<Protocol.Status>>()
+                .resolves(ProtocolStubs.okStatus);
+            const showQuickPickStub = sandbox.stub(window, 'showQuickPick') as sinon.SinonStub;
+            showQuickPickStub.onFirstCall().resolves({ label: deployable.label, resource: deployable } as any);
+            showQuickPickStub.onSecondCall().resolves('No' as any);
 
             await serverExplorer.selectAndAddDeployment(ProtocolStubs.startedServerState);
-            expect(openDialogStub).not.called;
+
+            expect(addDeployableStub).calledOnce;
         });
 
-        test('check if user doesn\'t choose any file from dialog', async () => {
-            sandbox.stub(window, 'showOpenDialog').resolves(undefined);
+        test('returns undefined when no deployables are available', async () => {
+            stubs.outgoingWTP.getDeployableResources = sandbox
+                .stub<[Protocol.ServerHandle, number], Promise<Protocol.ListDeployableResourcesResponse>>()
+                .resolves({ resources: [], status: ProtocolStubs.okStatus });
+            const showInfoStub = sandbox.stub(window, 'showInformationMessage');
+            const showQuickPickStub = sandbox.stub(window, 'showQuickPick');
+
             const result = await serverExplorer.selectAndAddDeployment(ProtocolStubs.startedServerState);
+
             expect(result).equals(undefined);
+            expect(showInfoStub).calledOnce;
+            expect(showQuickPickStub).not.called;
         });
 
-        test('check if user terminate before adding optional deployment parameters', async () => {
-            sandbox.stub(window, 'showOpenDialog').resolves([userSelectedPath]);
-            sandbox.stub(window, 'showQuickPick').resolves(undefined);
+        test('returns undefined when user cancels the selection', async () => {
+            stubs.outgoingWTP.getDeployableResources = sandbox
+                .stub<[Protocol.ServerHandle, number], Promise<Protocol.ListDeployableResourcesResponse>>()
+                .resolves({ resources: [deployable], status: ProtocolStubs.okStatus });
+            (sandbox.stub(window, 'showQuickPick') as sinon.SinonStub).resolves(undefined);
+
             const result = await serverExplorer.selectAndAddDeployment(ProtocolStubs.startedServerState);
+
             expect(result).equals(undefined);
         });
     });
@@ -796,7 +703,7 @@ suite('Server explorer', () => {
                 contextValue: 'Unknown',
                 collapsibleState: TreeItemCollapsibleState.Expanded,
                 command: {
-                    command: 'dev.server.saveSelectedNode',
+                    command: 'wtp.server.saveSelectedNode',
                     title: '',
                     tooltip: '',
                     arguments: [ ProtocolStubs.unknownServerState ]

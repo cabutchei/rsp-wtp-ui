@@ -1,12 +1,12 @@
 import { JobProgress } from '../jobprogress';
-import { Protocol, RSPClient } from 'rsp-client';
+import { Protocol, RSPWTPClient } from 'rsp-wtp-client';
 import * as vscode from 'vscode';
 import { ServerInfo } from 'vscode-server-connector-api';
 
 const PROTOCOL_VERSION = '0.23.0';
 
-export async function initClient(serverInfo: ServerInfo): Promise<RSPClient> {
-    const client = new RSPClient('localhost', serverInfo.port);
+export async function initClient(serverInfo: ServerInfo): Promise<RSPWTPClient> {
+    const client = new RSPWTPClient('localhost', serverInfo.port);
     await client.connect();
     client.getIncomingHandler().onPromptString(event => {
         return new Promise<string>((resolve, reject) => {
@@ -22,26 +22,26 @@ export async function initClient(serverInfo: ServerInfo): Promise<RSPClient> {
     });
     client.getIncomingHandler().onMessageBox(event => {
         return new Promise<string>((resolve, reject) => {
-            if( event.severity === 1 ) {
+            if(event.severity === 1) {
                 // info
                 vscode.window.showInformationMessage(event.message);
-            } else if( event.severity === 2 ) {
+            } else if(event.severity === 2) {
                 // warning
                 vscode.window.showWarningMessage(event.message);
-            } else if( event.severity === 4 ) {
+            } else if(event.severity === 4) {
                 // error
                 vscode.window.showErrorMessage(event.message);
             }
-        })
+        });
     });
 
     client.getOutgoingHandler().registerClientCapabilities({ 
-            map: { 
-                'protocol.version': PROTOCOL_VERSION, 
-                'prompt.string': 'true',
-                'messagebox': 'true',
-            } 
-        });
+        map: { 
+            'protocol.version': PROTOCOL_VERSION, 
+            'prompt.string': 'true',
+            'messagebox': 'true',
+        } 
+    });
     JobProgress.create(client);
 
     const toWorkspaceFolder = (folder: vscode.WorkspaceFolder): Protocol.WorkspaceFolder => ({
@@ -56,7 +56,7 @@ export async function initClient(serverInfo: ServerInfo): Promise<RSPClient> {
                 removed: removed.map(toWorkspaceFolder),
             },
         };
-        client.getOutgoingHandler().didChangeWorkspaceFolders(params);
+        client.getOutgoingWTPHandler().didChangeWorkspaceFolders(params);
     };
 
     const initialFolders = vscode.workspace.workspaceFolders || [];

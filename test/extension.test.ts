@@ -9,7 +9,7 @@ import * as chai from 'chai';
 import { ClientStubs } from './clientstubs';
 import { activate, deactivate } from '../src/extension';
 import { ProtocolStubs } from './protocolstubs';
-import { Protocol } from 'rsp-client';
+import { Protocol } from 'rsp-wtp-client';
 import { RSPProperties, ServerExplorer } from '../src/serverExplorer';
 import * as sinon from 'sinon';
 import * as sinonChai from 'sinon-chai';
@@ -122,33 +122,33 @@ suite('Extension Tests', () => {
         }        
         return await vscode.commands.getCommands(true).then(commands => {
             const SERVER_COMMANDS = [
-                'dev.server.startRSP',
-                'dev.server.stopRSP',
-                'dev.server.disconnectRSP',
-                'dev.server.terminateRSP',
-                'dev.server.start',
-                'dev.server.restart',
-                'dev.server.debug',
-                'dev.server.restartDebug',
-                'dev.server.stop',
-                'dev.server.terminate',
-                'dev.server.remove',
-                'dev.server.output',
-                'dev.server.addDeployment',
-                'dev.server.removeDeployment',
-                'dev.server.publishFull',
-                'dev.server.publishIncremental',
-                'dev.server.createServer',
-                'dev.server.addLocation',
-                'dev.server.downloadRuntime',
-                'dev.server.actions',
-                'dev.server.editServer',
-                'dev.server.application.run',
-                'dev.server.application.debug',
-                'dev.server.saveSelectedNode'
+                'wtp.server.startRSP',
+                'wtp.server.stopRSP',
+                'wtp.server.disconnectRSP',
+                'wtp.server.terminateRSP',
+                'wtp.server.start',
+                'wtp.server.restart',
+                'wtp.server.debug',
+                'wtp.server.restartDebug',
+                'wtp.server.stop',
+                'wtp.server.terminate',
+                'wtp.server.remove',
+                'wtp.server.output',
+                'wtp.server.addDeployment',
+                'wtp.server.removeDeployment',
+                'wtp.server.publishFull',
+                'wtp.server.publishIncremental',
+                'wtp.server.createServer',
+                'wtp.server.addLocation',
+                'wtp.server.downloadRuntime',
+                'wtp.server.actions',
+                'wtp.server.editServer',
+                'wtp.server.application.run',
+                'wtp.server.application.debug',
+                'wtp.server.saveSelectedNode'
             ];
             const foundServerCommands = commands.filter(value => {
-                return SERVER_COMMANDS.indexOf(value) >= 0 || value.startsWith('dev.server.');
+                return SERVER_COMMANDS.indexOf(value) >= 0 || value.startsWith('wtp.server.');
             });
             const t1 = foundServerCommands.length;
             const t2 = SERVER_COMMANDS.length;

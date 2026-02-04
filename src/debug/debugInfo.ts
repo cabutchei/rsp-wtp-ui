@@ -3,7 +3,7 @@
  *  Licensed under the EPL v2.0 License. See LICENSE file in the project root for license information.
  *-----------------------------------------------------------------------------------------------*/
 
-import { Protocol } from 'rsp-client';
+import { Protocol } from 'rsp-wtp-client';
 
 export class DebugInfo {
 
