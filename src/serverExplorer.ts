@@ -20,6 +20,7 @@ import {
     window,
     workspace
 } from 'vscode';
+import * as path from 'path';
 import { myContext } from './extension';
 
 import {
@@ -979,6 +980,91 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         return attributes;
     }
 
+    private getWtpIconUri(iconFile: string): { light: Uri; dark: Uri } {
+        const iconUri = Uri.joinPath(myContext.extensionUri, 'media', 'wtp', iconFile);
+        return { light: iconUri, dark: iconUri };
+    }
+
+    private getIconForExtension(extension?: string): { light: Uri; dark: Uri } | undefined {
+        if (!extension) {
+            return undefined;
+        }
+        switch (extension.toLowerCase()) {
+            case 'ear':
+                return this.getWtpIconUri('ear.gif');
+            case 'war':
+                return this.getWtpIconUri('web_module.gif');
+            case 'ejb':
+                return this.getWtpIconUri('ejb_module.gif');
+            case 'rar':
+                return this.getWtpIconUri('jar_obj.gif');
+            case 'jar':
+                return this.getWtpIconUri('java_jar.gif');
+            default:
+                return undefined;
+        }
+    }
+
+    private getIconForModuleTypeId(typeId?: string): { light: Uri; dark: Uri } | undefined {
+        if (!typeId) {
+            return undefined;
+        }
+        const normalized = typeId.toLowerCase();
+        if (normalized.includes('ear')) {
+            return this.getWtpIconUri('ear.gif');
+        }
+        if (normalized.includes('web') || normalized.includes('war')) {
+            return this.getWtpIconUri('web_module.gif');
+        }
+        if (normalized.includes('ejb')) {
+            return this.getWtpIconUri('ejb_module.gif');
+        }
+        if (normalized.includes('appclient') || normalized.includes('app-client') || normalized.includes('app_client')) {
+            return this.getWtpIconUri('appclient_module.gif');
+        }
+        if (normalized.includes('utility') || normalized.includes('connector') || normalized.includes('rar')) {
+            return this.getWtpIconUri('jar_obj.gif');
+        }
+        if (normalized.includes('jar') || normalized.includes('java')) {
+            return this.getWtpIconUri('java_jar.gif');
+        }
+        return undefined;
+    }
+
+    private getExtension(value?: string): string | undefined {
+        if (!value) {
+            return undefined;
+        }
+        const ext = path.extname(value).toLowerCase();
+        return ext.length > 1 ? ext.substring(1) : undefined;
+    }
+
+    private getDeployableIcon(reference: Protocol.DeployableReference): { light: Uri; dark: Uri } {
+        const typeIcon = this.getIconForModuleTypeId(reference.typeId);
+        if (typeIcon) {
+            return typeIcon;
+        }
+        const extension = this.getExtension(reference.path) ?? this.getExtension(reference.label);
+        const extensionIcon = this.getIconForExtension(extension);
+        if (extensionIcon) {
+            return extensionIcon;
+        }
+        return this.getWtpIconUri('prj_obj.gif');
+    }
+
+    private getModuleIcon(module: Protocol.ModuleReference): { light: Uri; dark: Uri } {
+        const typeIcon = this.getIconForModuleTypeId(module.typeId);
+        if (typeIcon) {
+            return typeIcon;
+        }
+        const extension = this.getExtension(module.name) ?? this.getExtension(module.id);
+        const extensionIcon = this.getIconForExtension(extension);
+        if (extensionIcon) {
+            return extensionIcon;
+        }
+        return this.getWtpIconUri('folder.gif');
+    }
+
     public async getTreeItem(item: RSPState | ServerStateNode |  DeployableStateNode | ModuleStateNode): Promise<TreeItem> {
         if (this.isRSPElement(item)) {
             const state: RSPState = item as RSPState;
@@ -1023,7 +1109,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             const id1: string = state.reference.label;
             const serverState: string = this.runStateEnum.get(state.state);
             const pubState: string = this.publishStateEnum.get(state.publishState);
-            const icon = await Utils.getIcon(state.rsp, state.server.type.id);
+            const icon = this.getDeployableIcon(state.reference);
             const modules = this.getModulesForDeployable(state);
             return { label: `${id1}`,
                 description: `(${serverState}) (${pubState})`,
@@ -1033,7 +1119,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             };
         } else if (this.isModuleElement(item)) {
             const state: ModuleStateNode = item as ModuleStateNode;
-            const icon = await Utils.getIcon(state.rsp, state.server.type.id);
+            const icon = this.getModuleIcon(state.module);
             const moduleLabel = state.module.name || state.module.id;
             const pubLabel = this.publishStateEnum.get(state.publishState);
             const description = pubLabel ? `(${pubLabel})` : '';
