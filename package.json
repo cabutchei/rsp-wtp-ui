@@ -411,7 +411,7 @@
 			}
 		},
 		"javaExtensions": [
-			"bundles/com.github.cabutchei.container.plugin-1.0.0-SNAPSHOT.jar"
+			"bundles/com.github.cabutchei.jdtls.jrecontainer-0.1.0.alpha.jar"
 		]
 	},
 	"scripts": {
@@ -454,9 +454,9 @@
 		"path": "0.12.7",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
-		"rsp-wtp-client": "0.1.0",
-		"tmp": "^0.2.1",
-		"rsp-wtp-server-connector-api": "0.1.0"
+		"rsp-wtp-client": "0.2.0",
+		"rsp-wtp-server-connector-api": "0.1.0",
+		"tmp": "^0.2.1"
 	},
 	"__metadata": {
 		"id": "8a56feef-5612-4ee5-ad7f-31d60c30ab32",

@@ -344,14 +344,14 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         if (!client || !deployable) {
             return;
         }
-        const options = await this.getDeploymentOptions(client, state);
-        if (!options) {
-            return;
-        }
+        // const options = await this.getDeploymentOptions(client, state);
+        // if (!options) {
+        //     return;
+        // }
         const deployableRef: Protocol.DeployableReference = {
             label: deployable.label,
             path: deployable.path,
-            options,
+            // options,
         };
         const req: Protocol.ServerDeployableReference = {
             server: state.server,
@@ -368,17 +368,17 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         const client: RSPWTPClient = this.RSPServersStatus.get(state.rsp).client;
         if (client && file && file.length === 1) {
 
-            const options = await this.getDeploymentOptions(client, state);
-            if (!options) {
-                return;
-            }
+            // const options = await this.getDeploymentOptions(client, state);
+            // if (!options) {
+            //     return;
+            // }
 
             // var fileUrl = require('file-url');
             // const filePath : string = fileUrl(file[0].fsPath);
             const deployableRef: Protocol.DeployableReference = {
                 label: file[0].fsPath,
                 path: file[0].fsPath,
-                options
+                // options
             };
             const req: Protocol.ServerDeployableReference = {
                 server: state.server,

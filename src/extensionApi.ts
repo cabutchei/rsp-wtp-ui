@@ -565,16 +565,17 @@ export class CommandHandler {
             context = this.explorer.RSPServersStatus.get(rsp.id).state;
         }
 
-        const download: string = await vscode.window.showQuickPick(['Yes', 'No, use server on disk'],
-            { placeHolder: 'Download server?', ignoreFocusOut: true });
-        if (!download) {
-            return;
-        }
-        if (download.startsWith('Yes')) {
-            return this.downloadRuntime(context.type.id);
-        } else if (download.startsWith('No')) {
-            return this.addLocation(context.type.id);
-        }
+        // const download: string = await vscode.window.showQuickPick(['Yes', 'No, use server on disk'],
+        //     { placeHolder: 'Download server?', ignoreFocusOut: true });
+        // if (!download) {
+        //     return;
+        // }
+        // if (download.startsWith('Yes')) {
+        //     return this.downloadRuntime(context.type.id);
+        // } else if (download.startsWith('No')) {
+        //     return this.addLocation(context.type.id);
+        // }
+        return this.addLocation(context.type.id);
     }
 
     private assertExplorerExists() {
@@ -1376,6 +1377,29 @@ export class CommandHandler {
         }
     }
 
+    private async handleJdtlsClasspathContainersDetected(event: Protocol.ClasspathContainerMappings): Promise<void> {
+        if (!event || !event.mappings || event.mappings.length === 0) {
+            return;
+        }
+        const seenContainers = new Set<string>();
+        for (const mapping of event.mappings) {
+            if (!mapping || !mapping.projectUri || !mapping.containerPath || !mapping.entries) {
+                continue;
+            }
+            const key = `${mapping.projectUri}::${mapping.containerPath}`;
+            if (seenContainers.has(key)) {
+                continue;
+            }
+            seenContainers.add(key);
+            await this.executeJdtlsWorkspaceCommand('com.github.cabutchei.rsp.jdtls.setClasspathContainer', {
+                projectUri: mapping.projectUri,
+                containerPath: mapping.containerPath,
+                description: mapping.description,
+                entries: mapping.entries,
+            });
+        }
+    }
+
     private async executeJdtlsWorkspaceCommand(command: string, args: Record<string, unknown>): Promise<unknown> {
         try {
             return await vscode.commands.executeCommand('java.execute.workspaceCommand', command, args);
@@ -1410,6 +1434,10 @@ export class CommandHandler {
 
         client.getIncomingHandler().onJdtlsJreContainersDetected(event => {
             this.handleJdtlsJreContainersDetected(event);
+        });
+
+        client.getIncomingHandler().onJdtlsClasspathContainersDetected(event => {
+            this.handleJdtlsClasspathContainersDetected(event);
         });
     }
 }
