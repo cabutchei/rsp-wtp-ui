@@ -426,31 +426,31 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
 
-    private async getDeploymentOptions(client: RSPWTPClient, state: ServerStateNode): Promise<Record<string, unknown>> {
-        const answer = await window.showQuickPick(['No', 'Yes'], {placeHolder:
-            'Do you want to edit optional deployment parameters?'});
-        const options = {};
-        if (!answer) {
-            return;
-        }
-        if (answer === 'Yes') {
-            const deployOptionsResponse: Protocol.ListDeploymentOptionsResponse =
-                await client.getOutgoingHandler().listDeploymentOptions(state.server);
-            const optionMap: Protocol.Attributes = deployOptionsResponse.attributes;
-            for (const key in optionMap.attributes) {
-                if (key) {
-                    const attribute = optionMap.attributes[key];
-                    const val = await window.showInputBox({prompt: attribute.description,
-                        value: attribute.defaultVal, password: attribute.secret});
-                    if (val) {
-                        options[key] = val;
-                    }
-                }
-            }
-        }
+    // private async getDeploymentOptions(client: RSPWTPClient, state: ServerStateNode): Promise<Record<string, unknown>> {
+    //     const answer = await window.showQuickPick(['No', 'Yes'], {placeHolder:
+    //         'Do you want to edit optional deployment parameters?'});
+    //     const options = {};
+    //     if (!answer) {
+    //         return;
+    //     }
+    //     if (answer === 'Yes') {
+    //         const deployOptionsResponse: Protocol.ListDeploymentOptionsResponse =
+    //             await client.getOutgoingHandler().listDeploymentOptions(state.server);
+    //         const optionMap: Protocol.Attributes = deployOptionsResponse.attributes;
+    //         for (const key in optionMap.attributes) {
+    //             if (key) {
+    //                 const attribute = optionMap.attributes[key];
+    //                 const val = await window.showInputBox({prompt: attribute.description,
+    //                     value: attribute.defaultVal, password: attribute.secret});
+    //                 if (val) {
+    //                     options[key] = val;
+    //                 }
+    //             }
+    //         }
+    //     }
 
-        return options;
-    }
+    //     return options;
+    // }
 
     public async removeDeployment(rspId: string, server: Protocol.ServerHandle, deployableRef: Protocol.DeployableReference): Promise<Protocol.Status> {
         const client: RSPWTPClient = this.getClientByRSP(rspId);
