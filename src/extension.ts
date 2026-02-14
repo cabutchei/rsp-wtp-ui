@@ -77,6 +77,8 @@ async function registerCommands(commandHandler: CommandHandler, context: vscode.
             commandHandler.publishServer, commandHandler, ServerState.PUBLISH_FULL, context, 'Unable to publish (Full) to the server: ')),
         vscode.commands.registerCommand('wtp.server.publishIncremental', context => executeCommand(
             commandHandler.publishServer, commandHandler, ServerState.PUBLISH_INCREMENTAL, context, 'Unable to publish (Incremental) to the server: ')),
+        vscode.commands.registerCommand('wtp.server.publishClean', context => executeCommand(
+            commandHandler.publishServer, commandHandler, ServerState.PUBLISH_CLEAN, context, 'Unable to publish (Clean) to the server: ')),
         vscode.commands.registerCommand('wtp.server.editServer', context => executeCommand(
             commandHandler.editServer, commandHandler, context, 'Unable to edit server properties')),
         vscode.commands.registerCommand('wtp.server.actions', context => executeCommand(

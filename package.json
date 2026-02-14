@@ -44,6 +44,7 @@
 		"onCommand:wtp.server.add",
 		"onCommand:wtp.server.publishFull",
 		"onCommand:wtp.server.publishIncremental",
+		"onCommand:wtp.server.publishClean",
 		"onCommand:wtp.server.startModule",
 		"onCommand:wtp.server.stopModule",
 		"onCommand:wtp.server.actions",
@@ -160,6 +161,11 @@
 			{
 				"command": "wtp.server.publishFull",
 				"title": "Publish Server (Full)",
+				"category": "Servers"
+			},
+			{
+				"command": "wtp.server.publishClean",
+				"title": "Publish Server (Clean)",
 				"category": "Servers"
 			},
 			{
@@ -289,6 +295,11 @@
 					"command": "wtp.server.publishFull",
 					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "3_server-deployments@7"
+				},
+				{
+					"command": "wtp.server.publishClean",
+					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
+					"group": "3_server-deployments@8"
 				},
 				{
 					"command": "wtp.server.addDeployment",
