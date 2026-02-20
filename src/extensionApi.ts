@@ -6,7 +6,7 @@
 'use strict';
 
 import { initClient } from './rsp/client';
-import { DebugInfo } from './debug/debugInfo';
+// import { DebugInfo } from './debug/debugInfo';
 import { DebugInfoProvider } from './debug/debugInfoProvider';
 import { JavaDebugSession } from './debug/javaDebugSession';
 import { Protocol, RSPWTPClient, ServerState, StatusSeverity } from 'rsp-wtp-client';
@@ -244,11 +244,11 @@ export class CommandHandler {
         if (!client) {
             return Promise.reject('Failed to contact the RSP server.');
         }
-        const debugInfo: DebugInfo = await DebugInfoProvider.retrieve(context.server, client);
-        const preReqError = await this.checkDebuggerPrereqs(debugInfo);
-        if (preReqError) {
-            return Promise.reject(preReqError);
-        }
+        // const debugInfo: DebugInfo = await DebugInfoProvider.retrieve(context.server, client);
+        // const preReqError = await this.checkDebuggerPrereqs(debugInfo);
+        // if (preReqError) {
+        //     return Promise.reject(preReqError);
+        // }
         const extensionPresent = this.checkDebuggerPresent();
         if (!extensionPresent) {
             return undefined;
@@ -1291,16 +1291,16 @@ export class CommandHandler {
         await config.update('runtimes', runtimes, vscode.ConfigurationTarget.Global);
     }
 
-    private async checkDebuggerPrereqs(debugInfo: DebugInfo): Promise<string | undefined> {
-        if (!debugInfo) {
-            return 'Could not find server debug info.';
-        }
+    // private async checkDebuggerPrereqs(debugInfo: DebugInfo): Promise<string | undefined> {
+    //     if (!debugInfo) {
+    //         return 'Could not find server debug info.';
+    //     }
 
-        if (!debugInfo.isJavaType()) {
-            return `rsp-wtp-ui doesn't support debugging with ${debugInfo.getType()} language at this time.`;
-        }
-        return undefined;
-    }
+    //     if (!debugInfo.isJavaType()) {
+    //         return `rsp-wtp-ui doesn't support debugging with ${debugInfo.getType()} language at this time.`;
+    //     }
+    //     return undefined;
+    // }
     private checkDebuggerPresent(): boolean {
         if (this.hasJavaDebugExtension()) {
             getTelemetryServiceInstance().then((x) => {
