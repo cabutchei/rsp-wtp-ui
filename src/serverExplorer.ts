@@ -138,7 +138,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
                 if (moduleNodes !== undefined) {
                     serverNode.moduleStates = moduleNodes;
                 }
-                this.RSPServersStatus.get(rspId).state.serverStates.push(serverNode);
+                this.upsertServerState(rspId, serverNode);
             }
         }
 
@@ -155,7 +155,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
                 serverNode.moduleStates = moduleNodes;
             }
             if (serverNode) {
-                this.RSPServersStatus.get(rspId).state.serverStates.push(serverNode);
+                this.upsertServerState(rspId, serverNode);
                 this.refresh(this.RSPServersStatus.get(rspId).state);
                 this.selectNode({rsp: rspId, ...state } as ServerStateNode);
             }
@@ -170,7 +170,12 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     public updateServer(rspId: string, event: Protocol.ServerState): void {
         const indexServer: number = this.RSPServersStatus.get(rspId).state.serverStates.
             findIndex(state => state.server.id === event.server.id);
-        const serverToUpdate: ServerStateNode = this.RSPServersStatus.get(rspId).state.serverStates[indexServer];
+        const serverToUpdate: ServerStateNode = indexServer >= 0
+            ? this.RSPServersStatus.get(rspId).state.serverStates[indexServer]
+            : this.convertToServerStateNode(rspId, event);
+        if (!serverToUpdate) {
+            return;
+        }
         const prevState = serverToUpdate.state;
         // update serverToUpdate based on event
         Object.keys(event).forEach(key => {
@@ -191,12 +196,34 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
                 // ignore module refresh errors
             });
         }
-        this.RSPServersStatus.get(rspId).state.serverStates[indexServer] = serverToUpdate;
+        this.upsertServerState(rspId, serverToUpdate);
         this.refresh(serverToUpdate);
         const channel: OutputChannel = this.serverOutputChannels.get(event.server.id);
         if (event.state === ServerState.STARTING && prevState !== ServerState.STARTING && channel) {
             channel.clear();
         }
+    }
+
+    // this method prevents the race condition between insertServer and initRSPNode at the start
+    private upsertServerState(rspId: string, serverNode: ServerStateNode): boolean {
+        if (!serverNode) {
+            return false;
+        }
+        const rspProps = this.RSPServersStatus.get(rspId);
+        if (!rspProps) {
+            return false;
+        }
+        if (rspProps.state.serverStates === undefined) {
+            rspProps.state.serverStates = [];
+        }
+        const idx = rspProps.state.serverStates.findIndex(state => state.server.id === serverNode.server.id);
+        if (idx === -1) {
+            rspProps.state.serverStates.push(serverNode);
+            return true;
+        }
+        // Preserve object identity so TreeDataProvider refresh(item) keeps pointing to the live node.
+        Object.assign(rspProps.state.serverStates[idx], serverNode);
+        return false;
     }
 
     private convertToServerStateNode(rspId: string, state: Protocol.ServerState): ServerStateNode {
