@@ -111,6 +111,7 @@ export class ProtocolStubs {
     };
 
     public static readonly deployableReference: Protocol.DeployableReference = {
+        id: 'fakeid',
         label: 'fake',
         path: 'fakepath'
     };

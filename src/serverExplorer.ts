@@ -376,8 +376,10 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         //     return;
         // }
         const deployableRef: Protocol.DeployableReference = {
+            id: deployable.id,
             label: deployable.label,
             path: deployable.path,
+            typeId: deployable.typeId,
             // options,
         };
         const req: Protocol.ServerDeployableReference = {
@@ -403,6 +405,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             // var fileUrl = require('file-url');
             // const filePath : string = fileUrl(file[0].fsPath);
             const deployableRef: Protocol.DeployableReference = {
+                id: file[0].fsPath,
                 label: file[0].fsPath,
                 path: file[0].fsPath,
                 // options
@@ -1242,6 +1245,9 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         }
         if (!a || !b) {
             return false;
+        }
+        if (a.id && b.id) {
+            return a.id === b.id;
         }
         return a.label === b.label && a.path === b.path;
     }

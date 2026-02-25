@@ -520,6 +520,7 @@ suite('Server explorer', () => {
         };
 
         const deployable: Protocol.DeployableReference = {
+            id: 'my-project-id',
             label: 'my-project',
             path: '/path/to/project'
         };
