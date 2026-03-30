@@ -5,6 +5,10 @@ import { ServerInfo } from 'rsp-wtp-server-connector-api';
 
 const PROTOCOL_VERSION = '0.23.0';
 
+export interface WorkspaceInitialization {
+    dispose(): void;
+}
+
 export async function initClient(serverInfo: ServerInfo): Promise<RSPWTPClient> {
     const client = new RSPWTPClient('localhost', serverInfo.port);
     await client.connect();
@@ -44,6 +48,10 @@ export async function initClient(serverInfo: ServerInfo): Promise<RSPWTPClient> 
     });
     JobProgress.create(client);
 
+    return client;
+}
+
+export async function initializeWorkspace(client: RSPWTPClient): Promise<WorkspaceInitialization> {
     const toWorkspaceFolder = (folder: vscode.WorkspaceFolder): Protocol.WorkspaceFolder => ({
         uri: folder.uri.toString(),
         name: folder.name,
@@ -98,12 +106,13 @@ export async function initClient(serverInfo: ServerInfo): Promise<RSPWTPClient> 
     const workspaceListener = vscode.workspace.onDidChangeWorkspaceFolders(event => {
         sendWorkspaceFolders(event.added, event.removed);
     });
-    client.onConnectionClosed(() => {
-        workspaceListener.dispose();
-        for (const disposable of watchDisposables) {
-            disposable.dispose();
-        }
-    });
 
-    return client;
+    return {
+        dispose() {
+            workspaceListener.dispose();
+            for (const disposable of watchDisposables) {
+                disposable.dispose();
+            }
+        }
+    };
 }

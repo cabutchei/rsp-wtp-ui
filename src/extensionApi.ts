@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { initClient } from './rsp/client';
+import { initClient, initializeWorkspace } from './rsp/client';
 // import { DebugInfo } from './debug/debugInfo';
 import { DebugInfoProvider } from './debug/debugInfoProvider';
 import { JavaDebugSession } from './debug/javaDebugSession';
@@ -70,11 +70,14 @@ export class CommandHandler {
         }
 
         const client = await initClient(serverInfo);
+        let workspaceInitialization: { dispose(): void } | undefined = undefined;
         client.onConnectionClosed(event => {
+            if (workspaceInitialization) {
+                workspaceInitialization.dispose();
+            }
             this.explorer.disposeRSPProperties(context.type.id);
             this.explorer.updateRSPServer(context.type.id, ServerState.STOPPED);
         });
-
         const rspProperties: RSPProperties = this.explorer.RSPServersStatus.get(context.type.id);
         rspProperties.client = client;
         rspProperties.state.serverStates = [];
@@ -82,6 +85,7 @@ export class CommandHandler {
 
         this.explorer.RSPServersStatus.set(context.type.id, rspProperties);
         await this.activate(context.type.id, client);
+        workspaceInitialization = await initializeWorkspace(client);
         this.explorer.initRSPNode(context.type.id);
     }
 
