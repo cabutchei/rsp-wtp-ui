@@ -59,7 +59,7 @@ class RSPProviderAPIImpl implements RSPModel {
     private async updateRSPActivationSetting(rsp: RSPServer, explorer: ServerExplorer): Promise<boolean> {
         let startRSP = true;
         let existingSettings: RSPProviderSetting[] = vscode.workspace.
-            getConfiguration('rsp-wtp-ui').
+            getConfiguration('wtp-rsp-ui').
             get<[RSPProviderSetting]>('enableStartServerOnActivation');
         // unfortunately it seems that the get method (above) works with some cache because
         // if i try to register two or more providers at once for the first time it always return an empty array,
@@ -87,7 +87,7 @@ class RSPProviderAPIImpl implements RSPModel {
                 startRSP = rspAlreadyRegistered.startOnActivation;
             }
         }
-        await vscode.workspace.getConfiguration('rsp-wtp-ui').update('enableStartServerOnActivation', existingSettings, true);
+        await vscode.workspace.getConfiguration('wtp-rsp-ui').update('enableStartServerOnActivation', existingSettings, true);
         return startRSP;
     }
 

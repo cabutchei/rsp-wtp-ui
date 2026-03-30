@@ -305,14 +305,14 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             this.serverOutputChannels.set(output.server.id, channel);
         }
         channel.append(output.text);
-        if (workspace.getConfiguration('rsp-wtp-ui.connectors').get<boolean>('showChannelOnServerOutput')) {
+        if (workspace.getConfiguration('wtp-rsp-ui.connectors').get<boolean>('showChannelOnServerOutput')) {
             channel.show(true);
         }
     }
 
     public showOutput(state: ServerStateNode): void {
         const channel: OutputChannel = this.serverOutputChannels.get(state.server.id);
-        if (channel && workspace.getConfiguration('rsp-wtp-ui.connectors').get<boolean>('showChannelOnServerOutput')) {
+        if (channel && workspace.getConfiguration('wtp-rsp-ui.connectors').get<boolean>('showChannelOnServerOutput')) {
             channel.show(true);
         }
     }
@@ -556,7 +556,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             throw new Error(`Could not detect any server at ${folders[0].fsPath}!`);
         }
 
-        const useWebviews = workspace.getConfiguration('rsp-wtp-ui').get<boolean>('newServerWebviewWorkflow');
+        const useWebviews = workspace.getConfiguration('wtp-rsp-ui').get<boolean>('newServerWebviewWorkflow');
         if(useWebviews) {
             return this.addLocationWizardImplementation(serverBeans[0], rspId, client, telemetryProps, startTime);
         }

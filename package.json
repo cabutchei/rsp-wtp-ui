@@ -372,32 +372,32 @@
 			"type": "object",
 			"title": "Servers View",
 			"properties": {
-				"rsp-wtp-ui.rsp.java.home": {
+				"wtp-rsp-ui.rsp.java.home": {
 					"type": [
 						"string",
 						"null"
 					],
 					"default": null,
-					"description": "Specifies the path to a full JDK (version 11 or newer) which will be used to launch the Runtime Server Protocol (RSP) Server, as well as be the default java to launch any Java-based runtimes that the RSP will control.\nOn Windows, backslashes must be escaped, i.e.\n\"rsp-ui.rsp.java.home\":\"C:\\\\Program Files\\\\Java\\\\jdk-11.0.13\"",
+					"description": "Specifies the path to a full JDK (version 11 or newer) which will be used to launch the Runtime Server Protocol (RSP) Server, as well as be the default java to launch any Java-based runtimes that the RSP will control.\nOn Windows, backslashes must be escaped, i.e.\n\"wtp-rsp-ui.rsp.java.home\":\"C:\\\\Program Files\\\\Java\\\\jdk-11.0.13\"",
 					"scope": "window"
 				},
-				"rsp-wtp-ui.connectors.showChannelOnServerOutput": {
+				"wtp-rsp-ui.connectors.showChannelOnServerOutput": {
 					"type": "boolean",
 					"default": true,
 					"description": "Show Server's output channel when new text added to output stream."
 				},
-				"rsp-wtp-ui.newServerWebviewWorkflow": {
+				"wtp-rsp-ui.newServerWebviewWorkflow": {
 					"type": "boolean",
 					"default": true,
 					"title": "Use webviews when creating a new server",
 					"description": "If true, use the webviews workflow when creating a new server. If false, use a series of prompts."
 				},
-				"rsp-wtp-ui.enableAsyncPublish": {
+				"wtp-rsp-ui.enableAsyncPublish": {
 					"type": "boolean",
 					"default": false,
 					"description": "Enable asynchronous publishing."
 				},
-				"rsp-wtp-ui.enableStartServerOnActivation": {
+				"wtp-rsp-ui.enableStartServerOnActivation": {
 					"type": "array",
 					"items": {
 						"type": "object",

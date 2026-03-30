@@ -422,7 +422,7 @@ suite('Command Handler', () => {
             try {
                 await handler.debugServer(ProtocolStubs.unknownServerState);
             } catch (err) {
-                expect(err).equals('rsp-wtp-ui doesn\'t support debugging with c# language at this time.');
+                expect(err).equals('wtp-rsp-ui doesn\'t support debugging with c# language at this time.');
             }
         });
 

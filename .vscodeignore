@@ -1,5 +1,6 @@
 .nyc_output
 .vscode/**
+.github/**
 .vscode-test/**
 out/test/**
 out/**/*.map
@@ -12,6 +13,7 @@ tslint.json
 org.jboss.tools.rsp.distribution-*.zip
 *.vsix
 build/**
+dist/**
 coverage/**
 screencast/**
 test/**
@@ -20,3 +22,4 @@ Jenkinsfile
 CONTRIBUTING.md
 *.tgz
 .eslintrc.json
+.DS_Store

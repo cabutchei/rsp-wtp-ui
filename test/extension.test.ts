@@ -68,7 +68,7 @@ suite('Extension Tests', () => {
         globalStorageUri: vscode.Uri.file(temporaryStorage),
         secrets: undefined,
         extension: {
-            id: 'cabutchei.rsp-wtp-ui',
+            id: 'cabutchei.wtp-rsp-ui',
             extensionUri: undefined,
             extensionPath: undefined,
             isActive: true,
@@ -101,7 +101,7 @@ suite('Extension Tests', () => {
     });
 
     test('Extension should be present', () => {
-        assert.ok(vscode.extensions.getExtension('cabutchei.rsp-wtp-ui'));
+        assert.ok(vscode.extensions.getExtension('cabutchei.wtp-rsp-ui'));
     });
 
     test('Server is started at extension activation time', async () => {
