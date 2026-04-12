@@ -366,17 +366,17 @@ export class CommandHandler {
                     client.getIncomingHandler().removeOnServerStateChanged(listener);
                     if (state.state === ServerState.STOPPED) {
                         switch (mode) {
-                        case ServerState.RUN_MODE_DEBUG: {
-                            await this.debugServer(context);
-                            return;
-                        }
-                        case ServerState.RUN_MODE_RUN: {
-                            await this.startServer(ServerState.RUN_MODE_RUN, context);
-                            return;
-                        }
-                        default: {
-                            vscode.window.showErrorMessage(`Could not restart server: unknown mode ${mode}`);
-                        }
+                            case ServerState.RUN_MODE_DEBUG: {
+                                await this.debugServer(context);
+                                return;
+                            }
+                            case ServerState.RUN_MODE_RUN: {
+                                await this.startServer(ServerState.RUN_MODE_RUN, context);
+                                return;
+                            }
+                            default: {
+                                vscode.window.showErrorMessage(`Could not restart server: unknown mode ${mode}`);
+                            }
                         }
                     } else {
                         vscode.window.showErrorMessage('Could not restart server. Server shutdown failed. Server still started');
