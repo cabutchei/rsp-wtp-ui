@@ -24,7 +24,7 @@
 		"adapters",
 		"RSP"
 	],
-	"icon": "images/rsp_ui_icon.png",
+	"icon": "images/wtp_rsp_ui.png",
 	"activationEvents": [
 		"onCommand:wtp.server.createServer",
 		"onCommand:wtp.server.addLocation",
