@@ -301,7 +301,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     public addServerOutput(output: Protocol.ServerProcessOutput): void {
         let channel: OutputChannel = this.serverOutputChannels.get(output.server.id);
         if (channel === undefined) {
-            channel = window.createOutputChannel(`Server: ${output.server.id}`);
+            channel = window.createOutputChannel(`Server: ${output.server.id}`, output.server.type.id);
             this.serverOutputChannels.set(output.server.id, channel);
         }
         channel.append(output.text);
