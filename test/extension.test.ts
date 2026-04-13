@@ -65,6 +65,7 @@ suite('Extension Tests', () => {
         storageUri: undefined,
         logUri: undefined,
         extensionMode: undefined,
+        languageModelAccessInformation: undefined as any,
         globalStorageUri: vscode.Uri.file(temporaryStorage),
         secrets: undefined,
         extension: {

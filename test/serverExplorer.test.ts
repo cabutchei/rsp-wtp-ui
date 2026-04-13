@@ -30,6 +30,7 @@ suite('Server explorer', () => {
         clear: () => { /* do nothing */ },
         dispose: () => { /* do nothing */ },
         appendLine: () => { /* do nothing */ },
+        replace: () => { /* do nothing */ },
         hide: () => { /* do nothing */ },
         name: 'fake'
     };

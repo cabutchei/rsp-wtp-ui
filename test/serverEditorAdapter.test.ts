@@ -43,6 +43,7 @@ suite('ServerEditorAdapter', () => {
         isDirty: false,
         isUntitled: false,
         languageId: '',
+        encoding: 'utf8',
         version: 1,
         eol: vscode.EndOfLine.CRLF,
         save: undefined,
