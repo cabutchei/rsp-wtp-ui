@@ -397,6 +397,13 @@
 					"default": false,
 					"description": "Enable asynchronous publishing."
 				},
+				"wtp-rsp-ui.requestTimeout": {
+					"type": "number",
+					"default": 7500,
+					"minimum": 1,
+					"scope": "window",
+					"description": "Default timeout in milliseconds for Runtime Server Protocol requests issued by the UI when a command does not specify one explicitly."
+				},
 				"wtp-rsp-ui.enableStartServerOnActivation": {
 					"type": "array",
 					"items": {
