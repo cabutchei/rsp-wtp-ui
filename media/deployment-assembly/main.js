@@ -151,7 +151,6 @@
                 'div',
                 { className: 'panel' },
                 e('div', { className: 'panel__meta' },
-                    e(Pill, null, 'Assembly Table'),
                     e('span', { className: 'panel__count' }, entries.length + ' entries')
                 ),
                 e('div', { className: 'panel__actions' },
