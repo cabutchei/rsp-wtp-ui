@@ -16,7 +16,6 @@ import { Utils } from './utils/utils';
 import * as vscode from 'vscode';
 import { RSPController, ServerInfo } from 'rsp-wtp-server-connector-api';
 import { WorkflowResponseStrategy, WorkflowResponseStrategyManager } from './workflow/response/workflowResponseStrategyManager';
-import { getTelemetryServiceInstance, sendTelemetry } from './telemetry';
 import { JAVA_DEBUG_EXTENSION } from './constants';
 import { IRecommendationService, Level, RecommendationCore} from '@redhat-developer/vscode-extension-proposals/lib';
 import { myContext } from './extension';
@@ -52,11 +51,6 @@ export class CommandHandler {
             || context.state === ServerState.UNKNOWN)) {
             return Promise.reject(`The RSP server ${context.type.visibilename} is already running.`);
         }
-
-        const telemetryProps = {
-            type: context.type.id,
-        };
-        sendTelemetry('server.startRSP', telemetryProps);
 
         const rspProvider: RSPController = await Utils.activateExternalProvider(context.type.id);
         this.setRSPListener(context.type.id, rspProvider);
@@ -94,10 +88,6 @@ export class CommandHandler {
             return Promise.reject('No RSP selected');
         }
         const id = context.type.id;
-        const telemetryProps = {
-            type: id,
-        };
-        sendTelemetry('server.disconnectRSP', telemetryProps);
 
         //const contextProperties = this.explorer.RSPServersStatus.get(id);
         const client: RSPWTPClient = this.explorer.getClientByRSP(id);
@@ -120,12 +110,6 @@ export class CommandHandler {
             if (!rsp || !rsp.id) return null;
             context = this.explorer.RSPServersStatus.get(rsp.id).state;
         }
-
-        const telemetryProps: any = {
-            type: context.type.id,
-            force: forced,
-        };
-        sendTelemetry('server.stopRSP', telemetryProps);
 
         if (context.state === ServerState.STARTED
             || context.state === ServerState.STARTING
@@ -174,12 +158,6 @@ export class CommandHandler {
         if (!client) {
             return Promise.reject('Failed to contact the RSP server.');
         }
-        const telemetryProps: any = {
-            type: context.server.type.id,
-            debug: false,
-        };
-        sendTelemetry('server.start', telemetryProps);
-
         const response = await client.getOutgoingHandler().startServerAsync({
             params: {
                 serverType: context.server.type.id,
@@ -203,12 +181,6 @@ export class CommandHandler {
             if (!serverId) return null;
             context = this.explorer.getServerStateById(rsp.id, serverId);
         }
-
-        const telemetryProps: any = {
-            type: context.server.type.id,
-            forced,
-        };
-        sendTelemetry('server.stop', telemetryProps);
 
         const serverState = this.explorer.getServerStateById(context.rsp, context.server.id).state;
         if ((!forced && serverState === ServerState.STARTED)
@@ -258,12 +230,6 @@ export class CommandHandler {
             return undefined;
         }
 
-        const telemetryProps: any = {
-            type: context.server.type.id,
-            debug: true
-        };
-        sendTelemetry('server.start', telemetryProps);
-
         this.startServer('debug', context)
             .then(serverStarted => {
                 if (!serverStarted
@@ -285,11 +251,6 @@ export class CommandHandler {
             if (!serverId) return null;
             context = this.explorer.getServerStateById(rsp.id, serverId);
         }
-        const telemetryProps: any = {
-            type: context.server.type.id,
-        };
-        sendTelemetry('server.remove', telemetryProps);
-
         const remove = await vscode.window.showWarningMessage(
             `Remove server ${context.server.id}?`, { modal: true }, 'Yes');
         return remove && this.removeStoppedServer(context.rsp, context.server);
@@ -319,10 +280,6 @@ export class CommandHandler {
             if (!serverId) return null;
             context = this.explorer.getServerStateById(rsp.id, serverId);
         }
-        const telemetryProps: any = {
-            type: context.server.type.id,
-        };
-        sendTelemetry('server.output', telemetryProps);
         this.explorer.showOutput(context);
     }
 
@@ -335,12 +292,6 @@ export class CommandHandler {
             if (!serverId) return null;
             context = this.explorer.getServerStateById(rsp.id, serverId);
         }
-        const telemetryProps: any = {
-            type: context.server.type.id,
-            mode,
-        };
-        sendTelemetry('server.restart', telemetryProps);
-
         const client: RSPWTPClient = this.explorer.getClientByRSP(context.rsp);
         if (!client) {
             return Promise.reject('Failed to contact the RSP server.');
@@ -399,10 +350,6 @@ export class CommandHandler {
         }
 
         if (this.explorer) {
-            const telemetryProps: any = {
-                type: context.server.type.id,
-            };
-            sendTelemetry('server.addDeployment', telemetryProps);
             return this.explorer.selectAndAddDeployment(context);
         }
         return Promise.reject('Runtime Server Protocol (RSP) Server is starting, please try again later.');
@@ -432,11 +379,6 @@ export class CommandHandler {
             context = deployment.deployable;
         }
 
-        const telemetryProps: any = {
-            type: context.server.type.id,
-        };
-        sendTelemetry('server.removeDeployment', telemetryProps);
-
         return this.explorer.removeDeployment(context.rsp, context.server, context.reference);
     }
 
@@ -458,12 +400,6 @@ export class CommandHandler {
             if (!deployment || !deployment.deployable) return null;
             context = deployment.deployable;
         }
-
-        const telemetryProps: any = {
-            rsp: context.rsp,
-            type: context.server.type.id,
-        };
-        sendTelemetry('server.startModule', telemetryProps);
 
         const serverState = this.explorer.getServerStateById(context.rsp, context.server.id);
         if (serverState && serverState.state === ServerState.STOPPED) {
@@ -507,12 +443,6 @@ export class CommandHandler {
             context = deployment.deployable;
         }
 
-        const telemetryProps = {
-            rsp: context.rsp,
-            type: context.server.type.id,
-        };
-        sendTelemetry('server.stopModule', telemetryProps);
-
         const serverState = this.explorer.getServerStateById(context.rsp, context.server.id);
         if (serverState && serverState.state === ServerState.STOPPED) {
             return Promise.reject('Cannot stop module when server is stopped.');
@@ -546,19 +476,7 @@ export class CommandHandler {
         }
         const isAsync = vscode.workspace.getConfiguration('wtp-rsp-ui').get<boolean>('enableAsyncPublish');
 
-        const telemetryProps: any = {
-            rspType: context.rsp,
-            serverType: context.server.type.id,
-            publishType,
-            async: isAsync,
-        };
-        const startTime = Date.now();
-        try {
-            return this.explorer.publish(context.rsp, context.server, publishType, isAsync);
-        } finally {
-            telemetryProps.duration = Date.now() - startTime;
-            sendTelemetry('server.publish', telemetryProps);
-        }
+        return this.explorer.publish(context.rsp, context.server, publishType, isAsync);
     }
 
     public async createServer(context?: RSPState): Promise<Protocol.Status | null> {
@@ -608,49 +526,30 @@ export class CommandHandler {
             rspId = rsp.id;
         }
 
-        const telemetryProps: any = { rspType: rspId };
-        const startTime = Date.now();
-
         const client = this.explorer.getClientByRSP(rspId);
         if (!client) {
-            telemetryProps.duration = Date.now() - startTime;
-            telemetryProps.errorMessage = 'Failed to contact the RSP server.';
-            sendTelemetry('server.add.download', telemetryProps);
             return Promise.reject('Failed to contact the RSP server.');
         }
 
         const rtId: string = await this.promptDownloadableRuntimes(client);
         if (!rtId) {
-            telemetryProps.duration = Date.now() - startTime;
-            telemetryProps.errorMessage = 'No runtime selected to download';
-            sendTelemetry('server.add.download', telemetryProps);
             return;
         }
-        telemetryProps.serverType = rtId;
         let response: Protocol.WorkflowResponse = await this.initEmptyDownloadRuntimeRequest(rtId, client);
         if (!response) {
-            telemetryProps.duration = Date.now() - startTime;
-            telemetryProps.errorMessage = 'No response for initial download runtime workflow request';
-            sendTelemetry('server.add.download', telemetryProps);
             return;
         }
 
-        try {
-            const workflowMap = {};
-            while (true) {
-                const status = await this.handleWorkflow(response, workflowMap);
-                if (!status) {
-                    telemetryProps.errorMessage = 'User did not complete download runtime workflow';
-                    return;
-                } else if (!StatusSeverity.isInfo(status)) {
-                    return status;
-                }
-                // Now we have a data map
-                response = await this.initDownloadRuntimeRequest(rtId, workflowMap, response.requestId, client);
+        const workflowMap = {};
+        while (true) {
+            const status = await this.handleWorkflow(response, workflowMap);
+            if (!status) {
+                return;
+            } else if (!StatusSeverity.isInfo(status)) {
+                return status;
             }
-        } finally {
-            telemetryProps.duration = Date.now() - startTime;
-            sendTelemetry('server.add.download', telemetryProps);
+            // Now we have a data map
+            response = await this.initDownloadRuntimeRequest(rtId, workflowMap, response.requestId, client);
         }
     }
 
@@ -674,18 +573,7 @@ export class CommandHandler {
             return;
         }
 
-        const telemetryProps: any = {
-            rsp: context.rsp,
-            type: context.server.type.id,
-            action: action.id,
-        };
-        const startTime = Date.now();
-        try {
-            return await this.executeServerAction(action, context, client);
-        } finally {
-            telemetryProps.duration = Date.now() - startTime;
-            sendTelemetry('server.actions', telemetryProps);
-        }
+        return await this.executeServerAction(action, context, client);
     }
 
     private async chooseServerActions(server: Protocol.ServerHandle, client: RSPWTPClient): Promise<ServerActionItem> {
@@ -782,12 +670,6 @@ export class CommandHandler {
             context = this.explorer.getServerStateById(rsp.id, serverId);
         }
 
-        const telemetryProps: any = {
-            rsp: context.rsp,
-            type: context.server.type.id,
-        };
-        sendTelemetry('server.editServer', telemetryProps);
-
         if (this.explorer) {
             return this.explorer.editServer(context.rsp, context.server);
         }
@@ -805,37 +687,27 @@ export class CommandHandler {
             context = this.explorer.getServerStateById(rsp.id, serverId);
         }
 
-        const telemetryProps: any = {
-            rsp: context.rsp,
-            type: context.server.type.id,
-        };
-        const startTime = Date.now();
-        try {
-            const client: RSPWTPClient = this.explorer.getClientByRSP(context.rsp);
-            if (!client) {
-                return Promise.reject(`Failed to contact the RSP server ${context.rsp}.`);
-            }
-            const response = await client.getOutgoingHandler().getServerAsJson(context.server);
-            if (!response || !StatusSeverity.isOk(response.status)) {
-                const message = response?.status?.message || 'Failed to read server configuration.';
-                return Promise.reject(message);
-            }
-            const vmInstallPath = this.extractServerAttribute(response.serverJson, 'vm.install.path')
-                || this.extractServerAttribute(response.serverJson, 'java.home');
-            if (!vmInstallPath) {
-                return Promise.reject('No vm.install.path attribute found in the server configuration.');
-            }
-            const javaHome = this.normalizeJavaHome(vmInstallPath);
-            const runtimeName = await this.getExecutionEnvironmentName(javaHome);
-            if (!runtimeName) {
-                return Promise.reject(`Unable to determine Java version for ${javaHome}.`);
-            }
-            await this.updateJavaConfigurationRuntimes(runtimeName, javaHome);
-            vscode.window.showInformationMessage(`Java runtime ${runtimeName} configured at ${javaHome}.`);
-        } finally {
-            telemetryProps.duration = Date.now() - startTime;
-            sendTelemetry('server.syncJavaRuntime', telemetryProps);
+        const client: RSPWTPClient = this.explorer.getClientByRSP(context.rsp);
+        if (!client) {
+            return Promise.reject(`Failed to contact the RSP server ${context.rsp}.`);
         }
+        const response = await client.getOutgoingHandler().getServerAsJson(context.server);
+        if (!response || !StatusSeverity.isOk(response.status)) {
+            const message = response?.status?.message || 'Failed to read server configuration.';
+            return Promise.reject(message);
+        }
+        const vmInstallPath = this.extractServerAttribute(response.serverJson, 'vm.install.path')
+            || this.extractServerAttribute(response.serverJson, 'java.home');
+        if (!vmInstallPath) {
+            return Promise.reject('No vm.install.path attribute found in the server configuration.');
+        }
+        const javaHome = this.normalizeJavaHome(vmInstallPath);
+        const runtimeName = await this.getExecutionEnvironmentName(javaHome);
+        if (!runtimeName) {
+            return Promise.reject(`Unable to determine Java version for ${javaHome}.`);
+        }
+        await this.updateJavaConfigurationRuntimes(runtimeName, javaHome);
+        vscode.window.showInformationMessage(`Java runtime ${runtimeName} configured at ${javaHome}.`);
     }
 
     public async runOnServer(uri: vscode.Uri, mode?: string): Promise<void> {
@@ -848,18 +720,7 @@ export class CommandHandler {
         if (!serverId) return;
         const context = this.explorer.getServerStateById(rsp.id, serverId);
 
-        const telemetryProps: any = {
-            rsp: context.rsp,
-            type: context.server.type.id,
-            mode,
-        };
-        const startTime = Date.now();
-        try {
-            return this.runOnServerImpl(context, uri, mode);
-        } finally {
-            telemetryProps.duration = Date.now() - startTime;
-            sendTelemetry('server.runOnServer', telemetryProps);
-        }
+        return this.runOnServerImpl(context, uri, mode);
     }
     public async runOnServerImpl(context:ServerStateNode, uri:vscode.Uri, mode?: string): Promise<void> {
 
@@ -1307,14 +1168,12 @@ export class CommandHandler {
     // }
     private checkDebuggerPresent(): boolean {
         if (this.hasJavaDebugExtension()) {
-            getTelemetryServiceInstance().then((x) => {
-                const recommendService: IRecommendationService = RecommendationCore.getService(myContext, x);
-                if(recommendService) {
-                    /*const result: UserChoice | undefined = */
-                    recommendService.show(JAVA_DEBUG_EXTENSION, true, undefined, Level.Warn, true);
-                    // TODO do something with the result? Store it? Maybe don't show again?
-                }
-            });
+            const recommendService: IRecommendationService | undefined = RecommendationCore.getService(myContext);
+            if(recommendService) {
+                /*const result: UserChoice | undefined = */
+                recommendService.show(JAVA_DEBUG_EXTENSION, true, undefined, Level.Warn, true);
+                // TODO do something with the result? Store it? Maybe don't show again?
+            }
             return false;
         }
         return true;

@@ -32,7 +32,6 @@ import {
 import { ServerEditorAdapter } from './serverEditorAdapter';
 import { Utils } from './utils/utils';
 import { RSPType, ServerInfo } from 'rsp-wtp-server-connector-api';
-import { sendTelemetry } from './telemetry';
 import { IWizardPage, SEVERITY, ValidatorResponseItem, WebviewWizard, WizardDefinition,WizardPageFieldDefinition, WizardPageSectionDefinition } from '@redhat-developer/vscode-wizard';
 import { PerformFinishResponse } from '@redhat-developer/vscode-wizard/lib/IWizardWorkflowManager';
 
@@ -517,14 +516,8 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async addLocation(rspId: string): Promise<Protocol.Status | null> {
-        const telemetryProps: any = { rspType: rspId };
-        const startTime: number = Date.now();
-
         const client: RSPWTPClient = this.getClientByRSP(rspId);
         if (!client) {
-            telemetryProps.duration = Date.now() - startTime;
-            telemetryProps.errorMessage = 'Unable to contact the RSP server.';
-            sendTelemetry('server.add.local', telemetryProps);
             return Promise.reject('Unable to contact the RSP server.');
         }
         const folders = await window.showOpenDialog({
@@ -536,9 +529,6 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
 
         if (!folders
           || folders.length === 0) {
-            telemetryProps.duration = Date.now() - startTime;
-            telemetryProps.errorMessage = 'User canceled browse to server home';
-            sendTelemetry('server.add.local', telemetryProps);
             return;
         }
 
@@ -550,17 +540,14 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
           || !serverBeans[0].serverAdapterTypeId
           || !serverBeans[0].typeCategory
           || serverBeans[0].typeCategory === 'UNKNOWN') {
-            telemetryProps.duration = Date.now() - startTime;
-            telemetryProps.errorMessage = `Could not detect any server at ${folders[0].fsPath}!`;
-            sendTelemetry('server.add.local', telemetryProps);
             throw new Error(`Could not detect any server at ${folders[0].fsPath}!`);
         }
 
         const useWebviews = workspace.getConfiguration('wtp-rsp-ui').get<boolean>('newServerWebviewWorkflow');
         if(useWebviews) {
-            return this.addLocationWizardImplementation(serverBeans[0], rspId, client, telemetryProps, startTime);
+            return this.addLocationWizardImplementation(serverBeans[0], rspId, client);
         }
-        return this.addLocationStepImplementation(serverBeans[0], rspId, client, telemetryProps, startTime);
+        return this.addLocationStepImplementation(serverBeans[0], rspId, client);
     }
 
     private attrTypeToFieldDefinitionType(attr: Protocol.Attribute): string {
@@ -610,7 +597,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async addLocationWizardImplementation(serverBean: Protocol.ServerBean, rspId: string,
-        client: RSPWTPClient, telemetryProps: any, startTime: number): Promise<Protocol.Status | null> {
+        client: RSPWTPClient): Promise<Protocol.Status | null> {
 
         let serverType: Protocol.ServerType = null;
         const serverTypes: Protocol.ServerType[] = await client.getOutgoingHandler().getServerTypes();
@@ -813,25 +800,16 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async addLocationStepImplementation(serverBean: Protocol.ServerBean, rspId: string,
-        client: RSPWTPClient, telemetryProps: any, startTime: number): Promise<Protocol.Status> {
+        client: RSPWTPClient): Promise<Protocol.Status> {
         const server: { name: string, bean: Protocol.ServerBean } = { name: null, bean: null };
         server.bean = serverBean;
         server.name = await this.getServerName(rspId);
         if (!server.name) {
-            telemetryProps.duration = Date.now() - startTime;
-            telemetryProps.errorMessage = 'User canceled when adding server name';
-            sendTelemetry('server.add.local', telemetryProps);
             return;
         }
-        telemetryProps.serverType = server.bean.serverAdapterTypeId;
-        try {
-            const attrs = await this.getRequiredParameters(server.bean, client);
-            await this.getOptionalParameters(server.bean, attrs);
-            return this.createServer(server.bean, server.name, attrs, client);
-        } finally {
-            telemetryProps.duration = Date.now() - startTime;
-            sendTelemetry('server.add.local', telemetryProps);
-        }
+        const attrs = await this.getRequiredParameters(server.bean, client);
+        await this.getOptionalParameters(server.bean, attrs);
+        return this.createServer(server.bean, server.name, attrs, client);
     }
 
     public async editServer(rspId: string, server: Protocol.ServerHandle): Promise<void> {

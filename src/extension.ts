@@ -11,7 +11,6 @@ import { ServerEditorAdapter } from './serverEditorAdapter';
 import { ServerExplorer } from './serverExplorer';
 import * as vscode from 'vscode';
 import { RSPModel } from 'rsp-wtp-server-connector-api';
-import { getTelemetryServiceInstance, initializeTelemetry, sendTelemetry}  from './telemetry';
 import { IRecommendationService, RecommendationCore } from '@redhat-developer/vscode-extension-proposals/lib';
 import { JAVA_DEBUG_EXTENSION } from './constants';
 
@@ -20,7 +19,6 @@ let commandHandler: CommandHandler;
 export let myContext: vscode.ExtensionContext;
 
 export async function activate(context: vscode.ExtensionContext): Promise<RSPModel> {
-    await initializeTelemetry(context);
     serversExplorer = ServerExplorer.getInstance();
     commandHandler = new CommandHandler(serversExplorer);
     myContext = context;
@@ -30,8 +28,7 @@ export async function activate(context: vscode.ExtensionContext): Promise<RSPMod
 }
 
 async function registerRecommendations(context: vscode.ExtensionContext) {
-    const telem = await getTelemetryServiceInstance();
-    const recommendService: IRecommendationService | undefined = RecommendationCore.getService(context, telem);
+    const recommendService: IRecommendationService | undefined = RecommendationCore.getService(context);
     if(recommendService) {
         const r1 = recommendService.create(JAVA_DEBUG_EXTENSION, 'Debugger for Java', 
             '\'Debugger for Java\'  is required to launch a server in debug mode and connect to it with a debugger.', false);
@@ -108,7 +105,7 @@ async function registerCommands(commandHandler: CommandHandler, context: vscode.
     const subscriptions = newLocal;
     subscriptions.forEach(element => {  context.subscriptions.push(element); }, this);
 
-    return sendTelemetry('activation');
+    return;
 }
 
 export function deactivate() {
@@ -135,26 +132,16 @@ function onDidCloseTextDocument(doc: vscode.TextDocument) {
     ServerEditorAdapter.getInstance(serversExplorer).onDidCloseTextDocument(doc);
 }
 
-export function executeCommandAndLog(name: string, command: (...args: any[]) => Promise<any>, thisArg: any, ...params: any[]) {
-    const telemetryProps: any = {
-        identifier: name,
-    };
-    const startTime = Date.now();
+export function executeCommandAndLog(_name: string, command: (...args: any[]) => Promise<any>, thisArg: any, ...params: any[]) {
     const commandErrorLabel = typeof params[params.length - 1] === 'string' ? params[params.length - 1] : '';
-    try {
-        return command.call(thisArg, ...params).catch((err: string | Error) => {
-            telemetryProps.error = err.toString();
-            const error = typeof err === 'string' ? new Error(err) : err;
-            const msg = error.message ? error.message : '';
-            if (commandErrorLabel === '' && msg === '') {
-                return;
-            }
-            vscode.window.showErrorMessage(`${commandErrorLabel} Extension backend error - ${msg.toLowerCase()}`);
-        });
-    } finally {
-        telemetryProps.duration = Date.now() - startTime;
-        sendTelemetry('command', telemetryProps);
-    }
+    return command.call(thisArg, ...params).catch((err: string | Error) => {
+        const error = typeof err === 'string' ? new Error(err) : err;
+        const msg = error.message ? error.message : '';
+        if (commandErrorLabel === '' && msg === '') {
+            return;
+        }
+        vscode.window.showErrorMessage(`${commandErrorLabel} Extension backend error - ${msg.toLowerCase()}`);
+    });
 }
 
 export function executeCommand(command: (...args: any[]) => Promise<any>, thisArg: any, ...params: any[]) {
