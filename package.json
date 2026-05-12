@@ -48,7 +48,6 @@
 		"onCommand:wtp.server.startModule",
 		"onCommand:wtp.server.stopModule",
 		"onCommand:wtp.server.actions",
-		"onCommand:wtp.server.syncJavaRuntime",
 		"onCommand:wtp.server.deploymentAssembly",
 		"onView:com.github.cabutchei.rsp.serversView",
 		"onLanguage:plaintext"
@@ -181,11 +180,6 @@
 			{
 				"command": "wtp.server.editServer",
 				"title": "Edit Server",
-				"category": "Servers"
-			},
-			{
-				"command": "wtp.server.syncJavaRuntime",
-				"title": "Sync Java Runtime",
 				"category": "Servers"
 			},
 			{
@@ -345,11 +339,6 @@
 					"command": "wtp.server.editServer",
 					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
 					"group": "6_server-info@2"
-				},
-				{
-					"command": "wtp.server.syncJavaRuntime",
-					"when": "view == com.github.cabutchei.rsp.serversView && viewItem =~ /^(Starting|Started|Debugging|Stopping|Stopped|Unknown)/",
-					"group": "6_server-info@3"
 				}
 			],
 			"explorer/context": [
