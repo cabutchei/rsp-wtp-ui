@@ -1,7 +1,7 @@
 {
 	"name": "wtp-rsp-ui",
 	"displayName": "WTP RSP UI",
-	"description": "Provides a unified UI to interact with runtimes and servers managed over the WTP-RSP protocol.",
+	"description": "A unified UI for WTP-RSP server connectors",
 	"version": "0.4.0",
 	"license": "SEE LICENSE IN LICENSE",
 	"publisher": "cabutchei",
