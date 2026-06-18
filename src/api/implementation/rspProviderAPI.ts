@@ -29,18 +29,17 @@ class RSPProviderAPIImpl implements RSPModel {
             return Promise.reject(error);
         }
 
-        const rspserverstdout = vscode.window.createOutputChannel(`${rsp.type.visibilename} (stdout)`);
-        const rspserverstderr = vscode.window.createOutputChannel(`${rsp.type.visibilename} (stderr)`);
         const rspState: RSPState = { ...rsp, serverStates: undefined };
         const rspProperties: RSPProperties = {
             state: rspState,
             client: undefined,
-            rspserverstderr,
-            rspserverstdout,
+            rspserverstderr: undefined,
+            rspserverstdout: undefined,
             info: undefined
         };
         const serversExplorer = ServerExplorer.getInstance();
         serversExplorer.RSPServersStatus.set(rsp.type.id, rspProperties);
+        serversExplorer.ensureRSPOutputChannels(rsp.type.id);
         serversExplorer.refresh();
         const startRSP = await this.updateRSPActivationSetting(rsp, serversExplorer);
         if (startRSP) {

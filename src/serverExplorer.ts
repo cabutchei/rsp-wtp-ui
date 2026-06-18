@@ -888,6 +888,20 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         return this.RSPServersStatus.get(server).rspserverstderr;
     }
 
+    public ensureRSPOutputChannels(rspId: string): void {
+        if (!this.RSPServersStatus.has(rspId)) {
+            return;
+        }
+
+        const rspProps = this.RSPServersStatus.get(rspId);
+        if (!rspProps.rspserverstdout) {
+            rspProps.rspserverstdout = window.createOutputChannel(`${rspProps.state.type.visibilename} (stdout)`);
+        }
+        if (!rspProps.rspserverstderr) {
+            rspProps.rspserverstderr = window.createOutputChannel(`${rspProps.state.type.visibilename} (stderr)`);
+        }
+    }
+
     public disposeRSPProperties(rspId: string) {
         if (!this.RSPServersStatus.has(rspId)) {
             return;
@@ -904,6 +918,10 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             rspProps.rspserverstderr.dispose();
         }
 
+        rspProps.client = undefined;
+        rspProps.info = undefined;
+        rspProps.rspserverstdout = undefined;
+        rspProps.rspserverstderr = undefined;
         this.RSPServersStatus.get(rspId).state.serverStates = undefined;
     }
 

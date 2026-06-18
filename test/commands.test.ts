@@ -122,6 +122,31 @@ suite('Command Handler', () => {
             expect(listenerStub).calledOnceWith('id', rspProvider);
         });
 
+        test('recreates RSP output channels before starting again', async () => {
+            sandbox.stub(Utils, 'activateExternalProvider' as any).resolves(rspProvider);
+            const fakeOutputChannel = () => ({
+                append: () => undefined,
+                appendLine: () => undefined,
+                clear: () => undefined,
+                dispose: () => undefined,
+                hide: () => undefined,
+                name: 'fake',
+                replace: () => undefined,
+                show: () => undefined
+            } as unknown as vscode.OutputChannel);
+            const createOutputChannelStub = sandbox.stub(vscode.window, 'createOutputChannel');
+            createOutputChannelStub.onFirstCall().returns(fakeOutputChannel() as any);
+            createOutputChannelStub.onSecondCall().returns(fakeOutputChannel() as any);
+            serverExplorer.RSPServersStatus.get('id').rspserverstdout = undefined;
+            serverExplorer.RSPServersStatus.get('id').rspserverstderr = undefined;
+
+            await handler.startRSP(ProtocolStubs.rspState);
+
+            expect(createOutputChannelStub).calledTwice;
+            expect(serverExplorer.RSPServersStatus.get('id').rspserverstdout).not.equals(undefined);
+            expect(serverExplorer.RSPServersStatus.get('id').rspserverstderr).not.equals(undefined);
+        });
+
         test('error if rspProvider.startRSP returns not valid response', async () => {
             sandbox.stub(Utils, 'activateExternalProvider' as any).resolves(rspProvider);
             rspProvider.startRSP = (stdOut: (data: string) => void, stdErr: (data: string) => void) => Promise.resolve(undefined);

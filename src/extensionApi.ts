@@ -54,6 +54,7 @@ export class CommandHandler {
 
         const rspProvider: RSPController = await Utils.activateExternalProvider(context.type.id);
         this.setRSPListener(context.type.id, rspProvider);
+        this.explorer.ensureRSPOutputChannels(context.type.id);
         const serverInfo: ServerInfo = await rspProvider.startRSP(
             (out: string) => this.onStdoutData(context.type.id, out),
             (err: string) => this.onStderrData(context.type.id, err)

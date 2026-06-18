@@ -810,6 +810,18 @@ suite('Server explorer', () => {
             serverExplorer.disposeRSPProperties('id');
             expect(disposeStdErrStub).calledOnce;
         });
+
+        test('check if disposed channels are cleared from rsp properties', async () => {
+            const rspserverstdout: OutputChannel = window.createOutputChannel('(stdout)');
+            const rspserverstderr = window.createOutputChannel('(stderr)');
+            serverExplorer.RSPServersStatus.get('id').rspserverstdout = rspserverstdout;
+            serverExplorer.RSPServersStatus.get('id').rspserverstderr = rspserverstderr;
+
+            serverExplorer.disposeRSPProperties('id');
+
+            expect(serverExplorer.RSPServersStatus.get('id').rspserverstdout).equals(undefined);
+            expect(serverExplorer.RSPServersStatus.get('id').rspserverstderr).equals(undefined);
+        });
     });
 
     suite('updateRSPServer', () => {
