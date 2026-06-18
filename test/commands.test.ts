@@ -213,16 +213,26 @@ suite('Command Handler', () => {
     });
 
     suite('exportEar', () => {
+        const sampleEarProject: Protocol.WorkspaceProject = {
+            name: 'sample-ear',
+            path: '/workspace/sample-ear',
+            open: true,
+        };
+
         setup(() => {
             serverExplorer.RSPServersStatus.get('id').client = stubs.client;
             stubs.outgoingWTP.exportEar.resolves(ProtocolStubs.okStatus);
+            stubs.outgoingWTP.listEarProjects.resolves({
+                projects: [sampleEarProject],
+                status: ProtocolStubs.okStatus,
+            });
         });
 
         test('exports an ear for the selected project', async () => {
-            const projectUri = vscode.Uri.file('/workspace/sample-ear');
+            const projectUri = vscode.Uri.file(sampleEarProject.path);
             sandbox.stub(vscode.workspace, 'getWorkspaceFolder').returns({
                 uri: projectUri,
-                name: 'sample-ear',
+                name: sampleEarProject.name,
                 index: 0,
             } as vscode.WorkspaceFolder);
             sandbox.stub(handler, 'selectRSP' as any).resolves({ id: 'id', label: 'the type' });
@@ -233,20 +243,65 @@ suite('Command Handler', () => {
             await handler.exportEar(projectUri);
 
             expect(quickPickStub).calledOnce;
+            expect(stubs.outgoingWTP.listEarProjects).calledOnce;
             expect(stubs.outgoingWTP.exportEar).calledOnceWith({
-                path: '/workspace/sample-ear',
-                projectName: 'sample-ear',
+                path: sampleEarProject.path,
+                projectName: sampleEarProject.name,
                 destinationPath: '/tmp/exported-app.ear',
                 exportSource: true,
             });
             expect(infoStub).calledOnceWith('EAR exported to /tmp/exported-app.ear.');
         });
 
+        test('picks from the server-provided ear projects when no resource is given', async () => {
+            const otherProject: Protocol.WorkspaceProject = {
+                name: 'other-ear',
+                path: '/workspace/other-ear',
+                open: true,
+            };
+            stubs.outgoingWTP.listEarProjects.resolves({
+                projects: [sampleEarProject, otherProject],
+                status: ProtocolStubs.okStatus,
+            });
+            sandbox.stub(handler, 'selectRSP' as any).resolves({ id: 'id', label: 'the type' });
+            sandbox.stub(vscode.window, 'showSaveDialog').resolves(vscode.Uri.file('/tmp/exported-app'));
+            const quickPickStub = sandbox.stub(vscode.window, 'showQuickPick');
+            quickPickStub.onFirstCall().resolves({ label: otherProject.name, description: otherProject.path, project: otherProject } as any);
+            quickPickStub.onSecondCall().resolves({ label: 'No', exportSource: false } as any);
+
+            await handler.exportEar(undefined);
+
+            expect(stubs.outgoingWTP.exportEar).calledOnceWith({
+                path: otherProject.path,
+                projectName: otherProject.name,
+                destinationPath: '/tmp/exported-app.ear',
+                exportSource: false,
+            });
+        });
+
+        test('shows the ear project picker even when there is only one option', async () => {
+            sandbox.stub(handler, 'selectRSP' as any).resolves({ id: 'id', label: 'the type' });
+            sandbox.stub(vscode.window, 'showSaveDialog').resolves(vscode.Uri.file('/tmp/exported-app'));
+            const quickPickStub = sandbox.stub(vscode.window, 'showQuickPick');
+            quickPickStub.onFirstCall().resolves({ label: sampleEarProject.name, description: sampleEarProject.path, project: sampleEarProject } as any);
+            quickPickStub.onSecondCall().resolves({ label: 'No', exportSource: false } as any);
+
+            await handler.exportEar(undefined);
+
+            expect(quickPickStub).calledTwice;
+            expect(stubs.outgoingWTP.exportEar).calledOnceWith({
+                path: sampleEarProject.path,
+                projectName: sampleEarProject.name,
+                destinationPath: '/tmp/exported-app.ear',
+                exportSource: false,
+            });
+        });
+
         test('does nothing when save is cancelled', async () => {
-            const projectUri = vscode.Uri.file('/workspace/sample-ear');
+            const projectUri = vscode.Uri.file(sampleEarProject.path);
             sandbox.stub(vscode.workspace, 'getWorkspaceFolder').returns({
                 uri: projectUri,
-                name: 'sample-ear',
+                name: sampleEarProject.name,
                 index: 0,
             } as vscode.WorkspaceFolder);
             sandbox.stub(handler, 'selectRSP' as any).resolves({ id: 'id', label: 'the type' });
@@ -257,11 +312,32 @@ suite('Command Handler', () => {
             expect(stubs.outgoingWTP.exportEar).not.called;
         });
 
-        test('errors when export request fails', async () => {
-            const projectUri = vscode.Uri.file('/workspace/sample-ear');
+        test('errors when the selected folder is not an ear project', async () => {
+            const projectUri = vscode.Uri.file('/workspace/not-an-ear');
             sandbox.stub(vscode.workspace, 'getWorkspaceFolder').returns({
                 uri: projectUri,
-                name: 'sample-ear',
+                name: 'not-an-ear',
+                index: 0,
+            } as vscode.WorkspaceFolder);
+            sandbox.stub(handler, 'selectRSP' as any).resolves({ id: 'id', label: 'the type' });
+            const saveDialogStub = sandbox.stub(vscode.window, 'showSaveDialog');
+
+            try {
+                await handler.exportEar(projectUri);
+                expect.fail();
+            } catch (err) {
+                expect(err).equals('The selected workspace folder is not an EAR project.');
+            }
+
+            expect(saveDialogStub).not.called;
+            expect(stubs.outgoingWTP.exportEar).not.called;
+        });
+
+        test('errors when export request fails', async () => {
+            const projectUri = vscode.Uri.file(sampleEarProject.path);
+            sandbox.stub(vscode.workspace, 'getWorkspaceFolder').returns({
+                uri: projectUri,
+                name: sampleEarProject.name,
                 index: 0,
             } as vscode.WorkspaceFolder);
             sandbox.stub(handler, 'selectRSP' as any).resolves({ id: 'id', label: 'the type' });

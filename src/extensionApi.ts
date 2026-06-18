@@ -749,25 +749,6 @@ export class CommandHandler {
     public async exportEar(resource?: vscode.Uri | { resourceUri?: vscode.Uri }): Promise<void> {
         this.assertExplorerExists();
         const targetUri = this.resolveResourceUri(resource);
-        let projectUri = targetUri;
-        let projectName = '';
-
-        if (!projectUri) {
-            const folder = await this.pickWorkspaceFolder('Select a workspace folder to export as EAR');
-            if (!folder) {
-                return;
-            }
-            projectUri = folder.uri;
-            projectName = folder.name;
-        } else {
-            const workspaceFolder = vscode.workspace.getWorkspaceFolder(projectUri);
-            if (workspaceFolder) {
-                projectUri = workspaceFolder.uri;
-                projectName = workspaceFolder.name;
-            } else {
-                projectName = path.basename(projectUri.fsPath);
-            }
-        }
 
         const rsp = await this.selectRSP(
             'Select RSP provider you want to use to export the EAR',
@@ -781,9 +762,25 @@ export class CommandHandler {
             return Promise.reject('Failed to contact the RSP server.');
         }
 
+        const earProjects = await this.listEarProjects(client);
+        if (earProjects.length === 0) {
+            return Promise.reject('No EAR projects are available in the current workspace.');
+        }
+
+        let project = this.resolveEarProject(targetUri, earProjects);
+        if (!project) {
+            if (targetUri) {
+                return Promise.reject('The selected workspace folder is not an EAR project.');
+            }
+            project = await this.pickEarProject(earProjects);
+            if (!project) {
+                return;
+            }
+        }
+
         const destinationUri = await vscode.window.showSaveDialog({
             title: 'Export EAR',
-            defaultUri: vscode.Uri.file(path.join(projectUri.fsPath, `${projectName}.ear`)),
+            defaultUri: vscode.Uri.file(path.join(project.path, `${project.name}.ear`)),
             filters: {
                 'Enterprise Archive': ['ear'],
             },
@@ -809,8 +806,8 @@ export class CommandHandler {
 
         const destinationPath = this.ensureEarExtension(destinationUri.fsPath);
         const status = await client.getOutgoingWTPHandler().exportEar({
-            path: projectUri.fsPath,
-            projectName,
+            path: project.path,
+            projectName: project.name,
             destinationPath,
             exportSource: sourceSelection.exportSource,
         });
@@ -1074,6 +1071,34 @@ export class CommandHandler {
         }
         const candidate = (resource as { resourceUri?: vscode.Uri }).resourceUri;
         return candidate instanceof vscode.Uri ? candidate : undefined;
+    }
+
+    private async listEarProjects(client: RSPWTPClient): Promise<Protocol.WorkspaceProject[]> {
+        const response = await client.getOutgoingWTPHandler().listEarProjects();
+        if (!response || !StatusSeverity.isOk(response.status)) {
+            return Promise.reject(response?.status?.message || 'Failed to list EAR projects.');
+        }
+        return response.projects ?? [];
+    }
+
+    private resolveEarProject(targetUri: vscode.Uri | undefined, earProjects: Protocol.WorkspaceProject[]): Protocol.WorkspaceProject | undefined {
+        if (!targetUri) {
+            return undefined;
+        }
+        const workspaceFolder = vscode.workspace.getWorkspaceFolder(targetUri);
+        const projectPath = path.resolve((workspaceFolder?.uri ?? targetUri).fsPath);
+        return earProjects.find(project => path.resolve(project.path) === projectPath);
+    }
+
+    private async pickEarProject(earProjects: Protocol.WorkspaceProject[]): Promise<Protocol.WorkspaceProject | undefined> {
+        const pick = await vscode.window.showQuickPick(
+            earProjects.map(project => ({ label: project.name, description: project.path, project })),
+            {
+                placeHolder: 'Select an EAR project to export',
+                ignoreFocusOut: true,
+            },
+        );
+        return pick?.project;
     }
 
     private async pickWorkspaceFolder(message: string): Promise<vscode.WorkspaceFolder> {
