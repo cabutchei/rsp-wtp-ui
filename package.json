@@ -2,7 +2,7 @@
 	"name": "wtp-rsp-ui",
 	"displayName": "WTP RSP UI",
 	"description": "A unified UI for WTP-RSP server connectors",
-	"version": "0.4.0",
+	"version": "0.5.0",
 	"license": "SEE LICENSE IN LICENSE",
 	"publisher": "cabutchei",
 	"author": "cabutchei",
@@ -477,7 +477,7 @@
 		"path": "0.12.7",
 		"react": "^18.2.0",
 		"react-dom": "^18.2.0",
-		"rsp-wtp-client": "0.4.0",
+		"rsp-wtp-client": "0.5.0",
 		"rsp-wtp-server-connector-api": "0.2.0",
 		"tmp": "^0.2.1"
 	},
