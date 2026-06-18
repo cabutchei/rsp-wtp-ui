@@ -5,7 +5,7 @@ import { ServerInfo } from 'rsp-wtp-server-connector-api';
 
 const PROTOCOL_VERSION = '0.23.0';
 const REQUEST_TIMEOUT_CONFIGURATION_KEY = 'requestTimeout';
-const REQUEST_TIMEOUT_DEFAULT = 7500;
+const REQUEST_TIMEOUT_DEFAULT = 10000;
 
 export interface WorkspaceInitialization {
     dispose(): void;
