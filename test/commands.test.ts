@@ -212,6 +212,72 @@ suite('Command Handler', () => {
         });
     });
 
+    suite('exportEar', () => {
+        setup(() => {
+            serverExplorer.RSPServersStatus.get('id').client = stubs.client;
+            stubs.outgoingWTP.exportEar.resolves(ProtocolStubs.okStatus);
+        });
+
+        test('exports an ear for the selected project', async () => {
+            const projectUri = vscode.Uri.file('/workspace/sample-ear');
+            sandbox.stub(vscode.workspace, 'getWorkspaceFolder').returns({
+                uri: projectUri,
+                name: 'sample-ear',
+                index: 0,
+            } as vscode.WorkspaceFolder);
+            sandbox.stub(handler, 'selectRSP' as any).resolves({ id: 'id', label: 'the type' });
+            sandbox.stub(vscode.window, 'showSaveDialog').resolves(vscode.Uri.file('/tmp/exported-app'));
+            const quickPickStub = sandbox.stub(vscode.window, 'showQuickPick').resolves({ label: 'Yes', exportSource: true } as any);
+            const infoStub = sandbox.stub(vscode.window, 'showInformationMessage');
+
+            await handler.exportEar(projectUri);
+
+            expect(quickPickStub).calledOnce;
+            expect(stubs.outgoingWTP.exportEar).calledOnceWith({
+                path: '/workspace/sample-ear',
+                projectName: 'sample-ear',
+                destinationPath: '/tmp/exported-app.ear',
+                exportSource: true,
+            });
+            expect(infoStub).calledOnceWith('EAR exported to /tmp/exported-app.ear.');
+        });
+
+        test('does nothing when save is cancelled', async () => {
+            const projectUri = vscode.Uri.file('/workspace/sample-ear');
+            sandbox.stub(vscode.workspace, 'getWorkspaceFolder').returns({
+                uri: projectUri,
+                name: 'sample-ear',
+                index: 0,
+            } as vscode.WorkspaceFolder);
+            sandbox.stub(handler, 'selectRSP' as any).resolves({ id: 'id', label: 'the type' });
+            sandbox.stub(vscode.window, 'showSaveDialog').resolves(undefined);
+
+            await handler.exportEar(projectUri);
+
+            expect(stubs.outgoingWTP.exportEar).not.called;
+        });
+
+        test('errors when export request fails', async () => {
+            const projectUri = vscode.Uri.file('/workspace/sample-ear');
+            sandbox.stub(vscode.workspace, 'getWorkspaceFolder').returns({
+                uri: projectUri,
+                name: 'sample-ear',
+                index: 0,
+            } as vscode.WorkspaceFolder);
+            sandbox.stub(handler, 'selectRSP' as any).resolves({ id: 'id', label: 'the type' });
+            sandbox.stub(vscode.window, 'showSaveDialog').resolves(vscode.Uri.file('/tmp/exported-app.ear'));
+            sandbox.stub(vscode.window, 'showQuickPick').resolves({ label: 'No', exportSource: false } as any);
+            stubs.outgoingWTP.exportEar.resolves(ProtocolStubs.errorStatus);
+
+            try {
+                await handler.exportEar(projectUri);
+                expect.fail();
+            } catch (err) {
+                expect(err).equals('Critical Error');
+            }
+        });
+    });
+
     suite('stopRSP', async () => {
 
         let serverInfo: ServerInfo;

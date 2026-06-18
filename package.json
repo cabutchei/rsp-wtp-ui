@@ -49,6 +49,7 @@
 		"onCommand:wtp.server.stopModule",
 		"onCommand:wtp.server.actions",
 		"onCommand:wtp.server.refreshWorkspaceProjects",
+		"onCommand:wtp.server.exportEar",
 		"onCommand:wtp.server.deploymentAssembly",
 		"onView:com.github.cabutchei.rsp.serversView",
 		"onLanguage:plaintext"
@@ -176,6 +177,11 @@
 			{
 				"command": "wtp.server.refreshWorkspaceProjects",
 				"title": "Refresh Workspace Projects",
+				"category": "Servers"
+			},
+			{
+				"command": "wtp.server.exportEar",
+				"title": "Export EAR",
 				"category": "Servers"
 			},
 			{
@@ -370,6 +376,11 @@
 					"command": "wtp.server.deploymentAssembly",
 					"when": "explorerResourceIsFolder",
 					"group": "1_server-application@3"
+				},
+				{
+					"command": "wtp.server.exportEar",
+					"when": "explorerResourceIsFolder",
+					"group": "1_server-application@4"
 				}
 			]
 		},

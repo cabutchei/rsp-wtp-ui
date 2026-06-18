@@ -86,6 +86,8 @@ async function registerCommands(commandHandler: CommandHandler, context: vscode.
             commandHandler.syncJavaRuntime, commandHandler, context, 'Unable to sync Java runtime: ')),
         vscode.commands.registerCommand('wtp.server.refreshWorkspaceProjects', context => executeCommand(
             commandHandler.refreshWorkspaceProjects, commandHandler, context, 'Unable to refresh workspace projects: ')),
+        vscode.commands.registerCommand('wtp.server.exportEar', resource => executeCommand(
+            commandHandler.exportEar, commandHandler, resource, 'Unable to export EAR: ')),
         vscode.commands.registerCommand('wtp.server.application.run', context => executeCommand(
             commandHandler.runOnServer, commandHandler, context, 'run', 'Unable to deploy and run application')),
         vscode.commands.registerCommand('wtp.server.application.debug', context => executeCommand(

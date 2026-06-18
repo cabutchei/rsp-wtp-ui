@@ -746,6 +746,80 @@ export class CommandHandler {
         vscode.window.showInformationMessage('Workspace projects refreshed.');
     }
 
+    public async exportEar(resource?: vscode.Uri | { resourceUri?: vscode.Uri }): Promise<void> {
+        this.assertExplorerExists();
+        const targetUri = this.resolveResourceUri(resource);
+        let projectUri = targetUri;
+        let projectName = '';
+
+        if (!projectUri) {
+            const folder = await this.pickWorkspaceFolder('Select a workspace folder to export as EAR');
+            if (!folder) {
+                return;
+            }
+            projectUri = folder.uri;
+            projectName = folder.name;
+        } else {
+            const workspaceFolder = vscode.workspace.getWorkspaceFolder(projectUri);
+            if (workspaceFolder) {
+                projectUri = workspaceFolder.uri;
+                projectName = workspaceFolder.name;
+            } else {
+                projectName = path.basename(projectUri.fsPath);
+            }
+        }
+
+        const rsp = await this.selectRSP(
+            'Select RSP provider you want to use to export the EAR',
+            value => value.client !== undefined
+        );
+        if (!rsp || !rsp.id) {
+            return;
+        }
+        const client: RSPWTPClient = this.explorer.getClientByRSP(rsp.id);
+        if (!client) {
+            return Promise.reject('Failed to contact the RSP server.');
+        }
+
+        const destinationUri = await vscode.window.showSaveDialog({
+            title: 'Export EAR',
+            defaultUri: vscode.Uri.file(path.join(projectUri.fsPath, `${projectName}.ear`)),
+            filters: {
+                'Enterprise Archive': ['ear'],
+            },
+            saveLabel: 'Export EAR',
+        });
+        if (!destinationUri) {
+            return;
+        }
+
+        const sourceSelection = await vscode.window.showQuickPick(
+            [
+                { label: 'No', exportSource: false },
+                { label: 'Yes', exportSource: true },
+            ],
+            {
+                placeHolder: 'Include source files in the exported EAR?',
+                ignoreFocusOut: true,
+            },
+        );
+        if (!sourceSelection) {
+            return;
+        }
+
+        const destinationPath = this.ensureEarExtension(destinationUri.fsPath);
+        const status = await client.getOutgoingWTPHandler().exportEar({
+            path: projectUri.fsPath,
+            projectName,
+            destinationPath,
+            exportSource: sourceSelection.exportSource,
+        });
+        if (!StatusSeverity.isOk(status)) {
+            return Promise.reject(status.message || 'Failed to export EAR.');
+        }
+        vscode.window.showInformationMessage(`EAR exported to ${destinationPath}.`);
+    }
+
     public async runOnServer(uri: vscode.Uri, mode?: string): Promise<void> {
         if (!this.explorer) {
             return Promise.reject('Runtime Server Protocol (RSP) Server is starting, please try again later.');
@@ -1015,6 +1089,13 @@ export class CommandHandler {
             { placeHolder: message },
         );
         return pick ? pick.folder : undefined;
+    }
+
+    private ensureEarExtension(targetPath: string): string {
+        if (!targetPath) {
+            return targetPath;
+        }
+        return targetPath.toLowerCase().endsWith('.ear') ? targetPath : `${targetPath}.ear`;
     }
 
     private async selectServer(rspId: string, message: string, stateFilter?: (value: ServerStateNode) => unknown): Promise<string> {
