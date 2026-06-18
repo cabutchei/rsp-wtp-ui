@@ -166,6 +166,52 @@ suite('Command Handler', () => {
         });
     });
 
+    suite('refreshWorkspaceProjects', () => {
+        setup(() => {
+            stubs.outgoingWTP.refreshWorkspaceProjects.resolves(ProtocolStubs.okStatus);
+            stubs.outgoingWTP.listWorkspaceProjects.resolves({
+                projects: [{ path: '/tmp/project', name: 'project', open: true }],
+                status: ProtocolStubs.okStatus
+            });
+            serverExplorer.RSPServersStatus.get('id').client = stubs.client;
+        });
+
+        test('selects an rsp when context is undefined', async () => {
+            const selectRSPStub = sandbox.stub(handler, 'selectRSP' as any).resolves({ id: 'id', label: 'the type' });
+            const initRSPNodeStub = sandbox.stub(serverExplorer, 'initRSPNode').resolves();
+            const infoStub = sandbox.stub(vscode.window, 'showInformationMessage');
+
+            await handler.refreshWorkspaceProjects(undefined);
+
+            expect(selectRSPStub).calledOnceWith('Select RSP provider whose workspace you want to refresh', sinon.match.func);
+            expect(stubs.outgoingWTP.refreshWorkspaceProjects).calledOnce;
+            expect(initRSPNodeStub).calledOnceWith('id');
+            expect(infoStub).calledOnceWith('Refreshed 1 workspace project.');
+        });
+
+        test('uses the rsp from a server context', async () => {
+            const initRSPNodeStub = sandbox.stub(serverExplorer, 'initRSPNode').resolves();
+            const infoStub = sandbox.stub(vscode.window, 'showInformationMessage');
+
+            await handler.refreshWorkspaceProjects(ProtocolStubs.startedServerState);
+
+            expect(stubs.outgoingWTP.refreshWorkspaceProjects).calledOnce;
+            expect(initRSPNodeStub).calledOnceWith('id');
+            expect(infoStub).calledOnce;
+        });
+
+        test('errors when the refresh request fails', async () => {
+            stubs.outgoingWTP.refreshWorkspaceProjects.resolves(ProtocolStubs.errorStatus);
+
+            try {
+                await handler.refreshWorkspaceProjects(ProtocolStubs.rspState);
+                expect.fail();
+            } catch (err) {
+                expect(err).equals('Critical Error');
+            }
+        });
+    });
+
     suite('stopRSP', async () => {
 
         let serverInfo: ServerInfo;

@@ -711,6 +711,41 @@ export class CommandHandler {
         vscode.window.showInformationMessage(`Java runtime ${runtimeName} configured at ${javaHome}.`);
     }
 
+    public async refreshWorkspaceProjects(context?: RSPState | ServerStateNode): Promise<void> {
+        this.assertExplorerExists();
+        let rspId = this.getRspIdFromContext(context);
+        if (!rspId) {
+            const rsp = await this.selectRSP(
+                'Select RSP provider whose workspace you want to refresh',
+                value => value.client !== undefined
+            );
+            if (!rsp || !rsp.id) {
+                return null;
+            }
+            rspId = rsp.id;
+        }
+
+        const client: RSPWTPClient = this.explorer.getClientByRSP(rspId);
+        if (!client) {
+            return Promise.reject('Failed to contact the RSP server.');
+        }
+
+        const status = await client.getOutgoingWTPHandler().refreshWorkspaceProjects();
+        if (!StatusSeverity.isOk(status)) {
+            return Promise.reject(status.message || 'Failed to refresh workspace projects.');
+        }
+
+        await this.explorer.initRSPNode(rspId);
+
+        const projectsResponse = await client.getOutgoingWTPHandler().listWorkspaceProjects();
+        if (projectsResponse && StatusSeverity.isOk(projectsResponse.status)) {
+            const count = projectsResponse.projects?.length ?? 0;
+            vscode.window.showInformationMessage(`Refreshed ${count} workspace project${count === 1 ? '' : 's'}.`);
+            return;
+        }
+        vscode.window.showInformationMessage('Workspace projects refreshed.');
+    }
+
     public async runOnServer(uri: vscode.Uri, mode?: string): Promise<void> {
         if (!this.explorer) {
             return Promise.reject('Runtime Server Protocol (RSP) Server is starting, please try again later.');
@@ -942,6 +977,18 @@ export class CommandHandler {
             return rspProviders[0];
         }
         return await vscode.window.showQuickPick(rspProviders, { placeHolder: message });
+    }
+
+    private getRspIdFromContext(context?: RSPState | ServerStateNode): string | undefined {
+        if (!context) {
+            return undefined;
+        }
+        const serverNode = context as ServerStateNode;
+        if (serverNode.server) {
+            return serverNode.rsp;
+        }
+        const rspState = context as RSPState;
+        return rspState.type?.id;
     }
 
     private resolveResourceUri(resource?: vscode.Uri | { resourceUri?: vscode.Uri }): vscode.Uri {

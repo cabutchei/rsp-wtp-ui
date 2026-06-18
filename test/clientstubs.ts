@@ -21,6 +21,9 @@ export class ClientStubs {
         this.outgoing = sandbox.createStubInstance(Outgoing);
         this.clientStub.getOutgoingHandler.returns(this.outgoing as unknown as Outgoing);
 
+        this.outgoingWTP = sandbox.createStubInstance(OutgoingWTP);
+        this.clientStub.getOutgoingWTPHandler.returns(this.outgoingWTP as unknown as OutgoingWTP);
+
         this.outgoingSync = sandbox.createStubInstance(OutgoingSynchronous);
         this.clientStub.getOutgoingSyncHandler.returns(this.outgoingSync as unknown as OutgoingSynchronous);
 
