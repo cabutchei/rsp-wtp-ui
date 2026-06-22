@@ -141,17 +141,23 @@ export class ServerEditorAdapter {
             return updateStatus.validation.status;
         }
 
-        const check: string = typeof updateStatus;
-        if(check !== 'object') {
-            return Promise.reject(updateStatus);
+        if (!updateStatus || typeof updateStatus !== 'object') {
+            return Promise.reject(this.toErrorMessage(updateStatus));
         }
 
-        this.saveAndShowEditor(file, updateStatus.serverJson.serverJson);
-        await vscode.workspace.openTextDocument(file).then(doc =>
-            vscode.window.showTextDocument(doc)
-        );
+        if (updateStatus.serverJson && updateStatus.serverJson.serverJson) {
+            this.saveAndShowEditor(file, updateStatus.serverJson.serverJson);
+            await vscode.workspace.openTextDocument(file).then(doc =>
+                vscode.window.showTextDocument(doc)
+            );
+        }
 
-        const msg = updateStatus.validation.status.message.concat('\n', updateStatus.validation.status.trace);
+        const status = updateStatus.validation?.status;
+        if (!status) {
+            return Promise.reject(this.toErrorMessage(updateStatus));
+        }
+        const trace = status.trace ? `\n${status.trace}` : '';
+        const msg = `${status.message || 'Failed to save server properties.'}${trace}`;
         return Promise.reject(msg);
     }
 
@@ -168,5 +174,12 @@ export class ServerEditorAdapter {
 
     private isTmpServerPropsFile(docName: string): boolean {
         return docName.indexOf(`${this.PREFIX_TMP}`) > -1;
+    }
+
+    private toErrorMessage(err: unknown): string {
+        if (err instanceof Error) {
+            return err.message;
+        }
+        return String(err);
     }
 }

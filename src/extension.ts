@@ -128,7 +128,8 @@ export function deactivate() {
 
 function onDidSaveTextDocument(doc: vscode.TextDocument) {
     ServerEditorAdapter.getInstance(serversExplorer).onDidSaveTextDocument(doc).catch(err => {
-        vscode.window.showErrorMessage(err);
+        const message = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(message);
     });
 }
 
