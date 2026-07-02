@@ -445,7 +445,7 @@
 			}
 		},
 		"javaExtensions": [
-			"bundles/com.github.cabutchei.jdtls.jrecontainer-0.2.0.alpha.jar"
+			"bundles/com.github.cabutchei.jdtls.serverbridge-0.2.0.alpha.jar"
 		]
 	},
 	"scripts": {
