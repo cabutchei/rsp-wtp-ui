@@ -116,21 +116,13 @@ export class CommandHandler {
             || context.state === ServerState.STARTING
             || context.state === ServerState.STOPPING) {
             this.explorer.updateRSPServer(context.type.id, ServerState.STOPPING);
-
-            if (!forced) {
-                const client: RSPWTPClient = this.explorer.getClientByRSP(context.type.id);
-                if (!client) {
-                    return Promise.reject(`Failed to contact the RSP server ${context.type.visibilename}.`);
-                }
-                client.shutdownServer();
-            } else {
-                const rspProvider: RSPController = await Utils.activateExternalProvider(context.type.id);
-                await rspProvider.stopRSP().catch(err => {
-                    // if stopRSP fails, server is still running
-                    this.explorer.updateRSPServer(context.type.id, ServerState.STARTED);
-                    return Promise.reject(`Failed to terminate ${context.type.visibilename} - ${err}`);
-                });
-            }
+            const rspProvider: RSPController = await Utils.activateExternalProvider(context.type.id);
+            await rspProvider.stopRSP().catch(err => {
+                // if stopRSP fails, server is still running
+                this.explorer.updateRSPServer(context.type.id, ServerState.STARTED);
+                const operation = forced ? 'terminate' : 'stop';
+                return Promise.reject(`Failed to ${operation} ${context.type.visibilename} - ${err}`);
+            });
 
             this.explorer.disposeRSPProperties(context.type.id);
             this.explorer.updateRSPServer(context.type.id, ServerState.STOPPED);
@@ -1355,77 +1347,6 @@ export class CommandHandler {
         }
     }
 
-    private async handleJdtlsJreContainersDetected(event: Protocol.JreContainerMappings): Promise<void> {
-        if (!event || !event.mappings || event.mappings.length === 0) {
-            return;
-        }
-        const vmKeys = new Set<string>();
-        const vmRequests: Array<{ vmName: string; javaHome: string }> = [];
-        for (const mapping of event.mappings) {
-            if (!mapping || !mapping.javaHome || !mapping.vmName) {
-                continue;
-            }
-            const key = `${mapping.vmName}::${mapping.javaHome}`;
-            if (!vmKeys.has(key)) {
-                vmKeys.add(key);
-                vmRequests.push({ vmName: mapping.vmName, javaHome: mapping.javaHome });
-            }
-        }
-        for (const request of vmRequests) {
-            await this.executeJdtlsWorkspaceCommand('com.github.cabutchei.rsp.jdtls.createVmInstall', {
-                javaHome: request.javaHome,
-                vmName: request.vmName,
-            });
-        }
-        const seenContainers = new Set<string>();
-        for (const mapping of event.mappings) {
-            if (!mapping || !mapping.projectUri || !mapping.containerPath) {
-                continue;
-            }
-            const key = `${mapping.projectUri}::${mapping.containerPath}`;
-            if (seenContainers.has(key)) {
-                continue;
-            }
-            seenContainers.add(key);
-            await this.executeJdtlsWorkspaceCommand('com.github.cabutchei.rsp.jdtls.setJreContainer', {
-                projectUri: mapping.projectUri,
-                containerPath: mapping.containerPath,
-            });
-        }
-    }
-
-    private async handleJdtlsClasspathContainersDetected(event: Protocol.ClasspathContainerMappings): Promise<void> {
-        if (!event || !event.mappings || event.mappings.length === 0) {
-            return;
-        }
-        const seenContainers = new Set<string>();
-        for (const mapping of event.mappings) {
-            if (!mapping || !mapping.projectUri || !mapping.containerPath || !mapping.entries) {
-                continue;
-            }
-            const key = `${mapping.projectUri}::${mapping.containerPath}`;
-            if (seenContainers.has(key)) {
-                continue;
-            }
-            seenContainers.add(key);
-            await this.executeJdtlsWorkspaceCommand('com.github.cabutchei.rsp.jdtls.setClasspathContainer', {
-                projectUri: mapping.projectUri,
-                containerPath: mapping.containerPath,
-                description: mapping.description,
-                entries: mapping.entries,
-            });
-        }
-    }
-
-    private async executeJdtlsWorkspaceCommand(command: string, args: Record<string, unknown>): Promise<unknown> {
-        try {
-            return await vscode.commands.executeCommand('java.execute.workspaceCommand', command, args);
-        } catch (err) {
-            console.warn(`Failed to execute JDT LS command ${command}.`, err);
-            return undefined;
-        }
-    }
-
     public async setRSPListener(rspId: string, rspProvider: RSPController): Promise<void> {
         rspProvider.onRSPServerStateChanged(state => {
             this.explorer.updateRSPServer(rspId, state);
@@ -1447,14 +1368,6 @@ export class CommandHandler {
 
         client.getIncomingHandler().onServerProcessOutputAppended(event => {
             this.explorer.addServerOutput(event);
-        });
-
-        client.getIncomingHandler().onJdtlsJreContainersDetected(event => {
-            this.handleJdtlsJreContainersDetected(event);
-        });
-
-        client.getIncomingHandler().onJdtlsClasspathContainersDetected(event => {
-            this.handleJdtlsClasspathContainersDetected(event);
         });
     }
 }

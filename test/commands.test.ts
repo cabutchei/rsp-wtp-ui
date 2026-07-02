@@ -401,31 +401,21 @@ suite('Command Handler', () => {
         });
 
         test('check if getClient is called with right param', async () => {
-            const getClientStub = sandbox.stub(serverExplorer, 'getClientByRSP').returns(stubs.client);
+            const activateExtStub = sandbox.stub(Utils, 'activateExternalProvider' as any).resolves(rspProvider);
             await handler.stopRSP(false, ProtocolStubs.rspStateStarted);
-            expect(getClientStub).calledOnceWith('id');
-        });
-
-        test('error if rsp\'s client is undefined', async () => {
-            sandbox.stub(serverExplorer, 'getClientByRSP').returns(undefined);
-            try {
-                await handler.stopRSP(false, ProtocolStubs.rspStateStarted);
-                expect.fail();
-            } catch (err) {
-                expect(err).equals('Failed to contact the RSP server the type.');
-            }
+            expect(activateExtStub).calledOnceWith('id');
         });
 
         test('check if updateState is called twice if not forced or forced and no error occured', async () => {
-            sandbox.stub(serverExplorer, 'getClientByRSP').returns(stubs.client);
+            sandbox.stub(Utils, 'activateExternalProvider' as any).resolves(rspProvider);
             await handler.stopRSP(false, ProtocolStubs.rspStateStarted);
             expect(updateStub).calledTwice;
         });
 
-        test('check that shutdown server is called if stop is not forced', async () => {
-            sandbox.stub(serverExplorer, 'getClientByRSP').returns(stubs.client);
+        test('check that external rsp provider is called if stop is not forced', async () => {
+            const activateExtStub = sandbox.stub(Utils, 'activateExternalProvider' as any).resolves(rspProvider);
             await handler.stopRSP(false, ProtocolStubs.rspStateStarted);
-            expect(stubs.clientStub.shutdownServer).calledOnce;
+            expect(activateExtStub).calledOnceWith('id');
         });
 
         test('check if external rsp provider is called if stop is forced', async () => {
@@ -438,10 +428,10 @@ suite('Command Handler', () => {
             rspProvider.stopRSP = () => Promise.reject('error');
             sandbox.stub(Utils, 'activateExternalProvider' as any).resolves(rspProvider);
             try {
-                await handler.stopRSP(true, ProtocolStubs.rspStateStarted);
+                await handler.stopRSP(false, ProtocolStubs.rspStateStarted);
                 expect.fail();
             } catch (err) {
-                expect(err).equals('Failed to terminate the type - error');
+                expect(err).equals('Failed to stop the type - error');
             }
         });
 

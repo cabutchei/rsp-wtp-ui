@@ -116,11 +116,7 @@ export function deactivate() {
     if(serversExplorer && serversExplorer.RSPServersStatus) {
         for (const rspProvider of serversExplorer.RSPServersStatus.values()) {
             if (rspProvider.client) {
-                if(rspProvider.info.spawned) {
-                    rspProvider.client.shutdownServer();
-                } else {
-                    rspProvider.client.disconnect();
-                }
+                rspProvider.client.disconnect();
             }
         }
     }

@@ -11,7 +11,7 @@ This extension is the UI layer only. It does not manage any concrete server runt
 - Lists servers, modules, deployments, and server actions
 - Starts, stops, restarts, debugs, and publishes servers
 - Shows server output streams in VS Code output channels
-- Integrates with JDT LS for runtime and classpath container synchronization
+- Connects to RSP providers that may be hosted inside the Java extension's Equinox runtime
 
 ## Not a standalone extension
 
@@ -80,7 +80,7 @@ The extension currently contributes these settings:
 - `rsp-wtp-server`: Eclipse/WTP-based RSP server implementation
 - `rsp-wtp-server-connector`: VS Code connector that launches and packages the server
 - `rsp-wtp-client`: generated protocol client used by the UI
-- `jdtls-jrecontainer-plugin`: JDT LS companion plugin used for Java runtime and classpath container synchronization
+- `jdtls-serverbridge-plugin`: JDT LS bridge project used to bootstrap the embedded RSP server
 
 ## Fork origin
 

@@ -165,7 +165,7 @@ suite('Extension Tests', () => {
         sandbox.assert.notCalled(stubs.clientStub.shutdownServer);
     });
 
-    test('RSP has been stopped on deactivation if spawned here', () => {
+    test('RSP client disconnects on deactivation if spawned here', () => {
         const rspProperties: RSPProperties = {
             client: stubs.client,
             rspserverstderr: undefined,
@@ -180,10 +180,10 @@ suite('Extension Tests', () => {
         serverExplorer.RSPServersStatus.set('id', rspProperties);
         deactivate();
 
-        expect(stubs.clientStub.shutdownServer).calledOnce;
+        expect(stubs.clientStub.disconnect).calledOnce;
     });
 
-    test('RSP has been stopped on disconnected if NOT spawned here', () => {
+    test('RSP client disconnects on deactivation if not spawned here', () => {
         const rspProperties: RSPProperties = {
             client: stubs.client,
             rspserverstderr: undefined,
