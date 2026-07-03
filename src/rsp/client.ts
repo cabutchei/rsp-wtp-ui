@@ -11,6 +11,8 @@ export interface WorkspaceInitialization {
     dispose(): void;
 }
 
+type TraceCallback = (message: string) => void;
+
 function getConfiguredRequestTimeout(): number {
     const configured = vscode.workspace.getConfiguration('wtp-rsp-ui')
         .get<number>(REQUEST_TIMEOUT_CONFIGURATION_KEY, REQUEST_TIMEOUT_DEFAULT);
@@ -45,9 +47,9 @@ function applyGlobalRequestTimeout(handler: any): void {
     }
 }
 
-export async function initClient(serverInfo: ServerInfo): Promise<RSPWTPClient> {
+export async function initClient(serverInfo: ServerInfo, traceCallback?: TraceCallback): Promise<RSPWTPClient> {
     const client = new RSPWTPClient('localhost', serverInfo.port);
-    await client.connect();
+    await client.connectWithTrace(getConfiguredRequestTimeout(), traceCallback);
     applyGlobalRequestTimeout(client.getOutgoingHandler());
     applyGlobalRequestTimeout(client.getOutgoingWTPHandler());
     client.getIncomingHandler().onPromptString(event => {

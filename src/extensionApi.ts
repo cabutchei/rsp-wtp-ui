@@ -64,7 +64,9 @@ export class CommandHandler {
             return Promise.reject(`Failed to start the ${context.type.visibilename} RSP server`);
         }
 
-        const client = await initClient(serverInfo);
+        const client = await initClient(serverInfo, (trace: string) => {
+            this.onStdoutData(context.type.id, `[client]\n${trace}`);
+        });
         let workspaceInitialization: { dispose(): void } | undefined = undefined;
         client.onConnectionClosed(event => {
             if (workspaceInitialization) {
