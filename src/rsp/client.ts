@@ -130,18 +130,65 @@ export async function initializeWorkspace(client: RSPWTPClient): Promise<Workspa
         sendWorkspaceFolders(initialFolders, []);
     }
 
-    const watchDisposables: vscode.Disposable[] = [];
+    type WatchRegistration = {
+        refs: number;
+        disposables: vscode.Disposable[];
+    };
+    const watchRegistrations = new Map<string, WatchRegistration>();
+    const normalizePattern = (pattern: string): string => pattern.trim();
+    const addWatchPattern = (pattern: string): void => {
+        if (!pattern || !pattern.trim().length) {
+            return;
+        }
+        const normalized = normalizePattern(pattern);
+        const existing = watchRegistrations.get(normalized);
+        if (existing) {
+            existing.refs += 1;
+            return;
+        }
+        const watcher = vscode.workspace.createFileSystemWatcher(normalized);
+        const disposables: vscode.Disposable[] = [
+            watcher,
+            watcher.onDidCreate(uri => sendWatchedFileEvent(uri, 1)),
+            watcher.onDidChange(uri => sendWatchedFileEvent(uri, 2)),
+            watcher.onDidDelete(uri => sendWatchedFileEvent(uri, 3)),
+        ];
+        watchRegistrations.set(normalized, { refs: 1, disposables });
+    };
+    const removeWatchPattern = (pattern: string): void => {
+        if (!pattern || !pattern.trim().length) {
+            return;
+        }
+        const normalized = normalizePattern(pattern);
+        const existing = watchRegistrations.get(normalized);
+        if (!existing) {
+            return;
+        }
+        existing.refs -= 1;
+        if (existing.refs > 0) {
+            return;
+        }
+        for (const disposable of existing.disposables) {
+            disposable.dispose();
+        }
+        watchRegistrations.delete(normalized);
+    };
     const watchPatterns = init?.watchPatterns || [];
     for (const pattern of watchPatterns) {
-        if (!pattern || !pattern.trim().length) {
-            continue;
-        }
-        const watcher = vscode.workspace.createFileSystemWatcher(pattern);
-        watchDisposables.push(watcher);
-        watchDisposables.push(watcher.onDidCreate(uri => sendWatchedFileEvent(uri, 1)));
-        watchDisposables.push(watcher.onDidChange(uri => sendWatchedFileEvent(uri, 2)));
-        watchDisposables.push(watcher.onDidDelete(uri => sendWatchedFileEvent(uri, 3)));
+        addWatchPattern(pattern);
     }
+
+    const watchPatternsChangedListener = (params: Protocol.WatchPatternsChangedParams) => {
+        const added = params?.added || [];
+        const removed = params?.removed || [];
+        for (const pattern of added) {
+            addWatchPattern(pattern);
+        }
+        for (const pattern of removed) {
+            removeWatchPattern(pattern);
+        }
+    };
+    client.getIncomingHandler().onWatchPatternsChanged(watchPatternsChangedListener);
 
     const workspaceListener = vscode.workspace.onDidChangeWorkspaceFolders(event => {
         sendWorkspaceFolders(event.added, event.removed);
@@ -150,9 +197,13 @@ export async function initializeWorkspace(client: RSPWTPClient): Promise<Workspa
     return {
         dispose() {
             workspaceListener.dispose();
-            for (const disposable of watchDisposables) {
-                disposable.dispose();
+            client.getIncomingHandler().removeOnWatchPatternsChanged(watchPatternsChangedListener);
+            for (const registration of watchRegistrations.values()) {
+                for (const disposable of registration.disposables) {
+                    disposable.dispose();
+                }
             }
+            watchRegistrations.clear();
         }
     };
 }
