@@ -2,7 +2,7 @@
 	"name": "wtp-rsp-ui",
 	"displayName": "WTP RSP UI",
 	"description": "A unified UI for WTP-RSP server connectors",
-	"version": "0.6.0",
+	"version": "0.7.0",
 	"license": "SEE LICENSE IN LICENSE",
 	"publisher": "cabutchei",
 	"author": "cabutchei",
@@ -443,11 +443,8 @@
 					"description": "Specifies which RSP Server have to be automatically started during activation. If option is disabled, user will have to manually start the RSP Server through command palette or context menu"
 				}
 			}
+			}
 		},
-		"javaExtensions": [
-			"bundles/com.github.cabutchei.jdtls.serverbridge-0.2.0.alpha.jar"
-		]
-	},
 	"scripts": {
 		"vscode:package": "node ./build/package-vsix.js",
 		"vscode:prepublish": "npm run compile",
