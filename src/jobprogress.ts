@@ -8,6 +8,7 @@ import * as vscode from 'vscode';
 export class JobProgress {
 
     private static readonly JOB_TIMEOUT: number = 1000 * 60 * 10; // 10 minutes
+    private static readonly STATUS_BAR_PRIORITY = 100;
 
     private readonly job: Protocol.JobHandle;
     private readonly client: RSPWTPClient;
@@ -15,6 +16,7 @@ export class JobProgress {
     private readonly cancellation: vscode.CancellationToken;
     private readonly reject: (reason?: any) => void;
     private readonly resolve: (value?: Protocol.JobHandle | PromiseLike<Protocol.JobHandle>) => void;
+    private readonly statusBarItem: vscode.StatusBarItem;
     private timeoutId: NodeJS.Timeout;
     private percents = 0;
 
@@ -51,8 +53,13 @@ export class JobProgress {
         this.cancellation = cancellation;
         this.reject = reject;
         this.resolve = resolve;
+        this.statusBarItem = vscode.window.createStatusBarItem(
+            vscode.StatusBarAlignment.Left,
+            JobProgress.STATUS_BAR_PRIORITY
+        );
         this.initListeners();
         this.setTimeout();
+        this.updateStatusBar();
 
         progress.report({ increment: 0 });
     }
@@ -70,9 +77,17 @@ export class JobProgress {
         if (!this.isJob(jobProgress.handle)) {
             return;
         }
-        this.progress.report({ message: `${jobProgress.percent}%`, increment: jobProgress.percent - this.percents });
+        this.progress.report({
+            message: this.getProgressMessage(jobProgress),
+            increment: jobProgress.percent - this.percents
+        });
         this.percents = jobProgress.percent;
+        this.updateStatusBar(jobProgress.message);
         this.restartTimeout();
+    }
+
+    private getProgressMessage(jobProgress: Protocol.JobProgress): string | undefined {
+        return this.normalizeMessage(jobProgress.message);
     }
 
     private onJobRemoved(jobRemoved: Protocol.JobRemoved) {
@@ -80,6 +95,7 @@ export class JobProgress {
             return;
         }
         this.clearTimeout();
+        this.disposeStatusBar();
         if (!StatusSeverity.isOk(jobRemoved.status)) {
             this.reject(this.getErrorMessage(jobRemoved.status));
         } else {
@@ -106,6 +122,7 @@ export class JobProgress {
         if (this.timeoutId) {
             this.clearTimeout();
         }
+        this.disposeStatusBar();
         this.reject();
     }
 
@@ -121,6 +138,7 @@ export class JobProgress {
     private setTimeout() {
         this.timeoutId = setTimeout(() => {
             console.log(`Job ${this.job.name} timed out at ${this.percents}`);
+            this.disposeStatusBar();
             this.reject(`${this.job.name} timed out.`);
         }, JobProgress.JOB_TIMEOUT);
     }
@@ -129,5 +147,23 @@ export class JobProgress {
         if (this.timeoutId) {
             clearTimeout(this.timeoutId);
         }
+    }
+
+    private updateStatusBar(detailMessage?: string) {
+        const percentLabel = `${Math.round(this.percents)}%`;
+        this.statusBarItem.text = `$(sync~spin) ${this.job.name} (${percentLabel})`;
+        const detail = this.normalizeMessage(detailMessage);
+        this.statusBarItem.tooltip = detail ? `${this.job.name}\n${detail}` : this.job.name;
+        this.statusBarItem.show();
+    }
+
+    private disposeStatusBar() {
+        this.statusBarItem.hide();
+        this.statusBarItem.dispose();
+    }
+
+    private normalizeMessage(message?: string): string | undefined {
+        const detail = message?.trim();
+        return detail ? detail : undefined;
     }
 }

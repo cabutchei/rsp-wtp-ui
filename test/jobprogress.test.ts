@@ -43,6 +43,11 @@ suite('Job Progress', () => {
         options: vscode.ProgressOptions,
         task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Thenable<unknown>) => Thenable<unknown>;
     let withProgressFakeSpy;
+    let statusBarItemStub: vscode.StatusBarItem;
+    let statusBarShowSpy: sinon.SinonSpy;
+    let statusBarHideSpy: sinon.SinonSpy;
+    let statusBarDisposeSpy: sinon.SinonSpy;
+    let createStatusBarItemStub: sinon.SinonStub;
 
     setup(() => {
         sandbox = sinon.createSandbox();
@@ -58,6 +63,23 @@ suite('Job Progress', () => {
             }
         };
         progressStubReport = sandbox.spy(progressStub, 'report');
+        statusBarShowSpy = sandbox.spy();
+        statusBarHideSpy = sandbox.spy();
+        statusBarDisposeSpy = sandbox.spy();
+        statusBarItemStub = {
+            alignment: vscode.StatusBarAlignment.Left,
+            priority: 0,
+            text: '',
+            tooltip: '',
+            color: undefined,
+            backgroundColor: undefined,
+            accessibilityInformation: undefined,
+            name: undefined,
+            command: undefined,
+            show: statusBarShowSpy,
+            hide: statusBarHideSpy,
+            dispose: statusBarDisposeSpy
+        } as unknown as vscode.StatusBarItem;
         withProgressFake = (
             options: vscode.ProgressOptions, 
             task: (
@@ -69,6 +91,7 @@ suite('Job Progress', () => {
             return progressTaskPromise;
         };
         withProgressFakeSpy = sandbox.stub(vscode.window, 'withProgress').callsFake(withProgressFake);
+        createStatusBarItemStub = sandbox.stub(vscode.window, 'createStatusBarItem').returns(statusBarItemStub);
     });
 
     teardown(() => {
@@ -105,6 +128,16 @@ suite('Job Progress', () => {
             title: job.name,
             cancellable: true
         });
+    });
+
+    test('onJobAdded notification should create a status bar item for the stable job label', () => {
+        JobProgress.create(stubs.client);
+
+        callOnJobAddedListenerWith(job, stubs.incoming.onJobAdded);
+
+        expect(createStatusBarItemStub).calledOnce;
+        expect(statusBarItemStub.text).to.equal(`$(sync~spin) ${job.name} (0%)`);
+        expect(statusBarShowSpy).calledOnce;
     });
 
     test('onJobAdded notification should register listeners for onJobChanged, onJobRemoved', () => {
@@ -144,6 +177,24 @@ suite('Job Progress', () => {
         expect(progressStubReport.args).to.have.lengthOf(3);
         expect(progressStubReport.getCall(1).args[0]).to.deep.property('increment', jobProgress10.percent - 0);
         expect(progressStubReport.getCall(2).args[0]).to.deep.property('increment', jobProgress40.percent - jobProgress10.percent);
+    });
+
+    test('onJobChanged notification should report only the changing detail message', () => {
+        const jobProgress: Protocol.JobProgress = {
+            percent: 40,
+            handle: job,
+            message: 'ADMA5016I: Installation started.'
+        };
+        JobProgress.create(stubs.client);
+
+        callOnJobAddedListenerWith(job, stubs.incoming.onJobAdded);
+        callOnJobChangedListenerWith(jobProgress, stubs.incoming.onJobChanged);
+
+        expect(progressStubReport.getCall(1).args[0]).to.deep.include({
+            message: 'ADMA5016I: Installation started.',
+            increment: 40
+        });
+        expect(statusBarItemStub.text).to.equal(`$(sync~spin) ${job.name} (40%)`);
     });
 
     test('onJobChanged notification should not be reported if other job', () => {
@@ -300,6 +351,28 @@ suite('Job Progress', () => {
 
         // then
         expect(progressTaskPromise).to.eventually.equal(job);
+    });
+
+    test('disposing a completed job should remove the status bar item', () => {
+        const okStatus: Protocol.Status = {
+            severity: 0,
+            plugin: undefined,
+            code: 0,
+            message: undefined,
+            trace: undefined,
+            ok: true
+        };
+        const jobRemoved: Protocol.JobRemoved = {
+            handle: job,
+            status: okStatus
+        };
+        JobProgress.create(stubs.client);
+        callOnJobAddedListenerWith(job, stubs.incoming.onJobAdded);
+
+        callOnJobRemovedListenerWith(jobRemoved, stubs.incoming.onJobRemoved);
+
+        expect(statusBarHideSpy).calledOnce;
+        expect(statusBarDisposeSpy).calledOnce;
     });
 });
 
