@@ -22,8 +22,8 @@ export class JobProgress {
         client.getIncomingHandler().onJobAdded((jobHandle: Protocol.JobHandle) => {
             vscode.window.withProgress(
                 {
-                    location: vscode.ProgressLocation.Notification,
-                    title: `Job ${jobHandle.name} started`,
+                    location: vscode.ProgressLocation.Window,
+                    title: jobHandle.name,
                     cancellable: true
                 },
                 (progress, token) => {
@@ -54,7 +54,7 @@ export class JobProgress {
         this.initListeners();
         this.setTimeout();
 
-        progress.report({ message: `${job.name} started...`, increment: 0 });
+        progress.report({ increment: 0 });
     }
 
     private initListeners() {

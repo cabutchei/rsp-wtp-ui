@@ -1371,5 +1371,13 @@ export class CommandHandler {
         client.getIncomingHandler().onServerProcessOutputAppended(event => {
             this.explorer.addServerOutput(event);
         });
+
+        client.getIncomingHandler().onServerPublishStarted(server => {
+            this.explorer.markServerPublishStarted(rspId, server);
+        });
+
+        client.getIncomingHandler().onServerPublishFinished(server => {
+            this.explorer.markServerPublishFinished(rspId, server);
+        });
     }
 }

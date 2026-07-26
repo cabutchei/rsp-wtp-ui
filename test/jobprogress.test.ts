@@ -36,12 +36,12 @@ suite('Job Progress', () => {
         id: 'smurfette.id'
     };
     let cancellationStub: vscode.CancellationToken;
-    let progressStub: vscode.Progress<{ message: string, increment: number }>;
-    let progressStubReport: sinon.SinonSpy<[{ message: string; increment: number; }], void>;
+    let progressStub: vscode.Progress<{ message?: string, increment?: number }>;
+    let progressStubReport: sinon.SinonSpy<[{ message?: string; increment?: number; }], void>;
     let progressTaskPromise: Thenable<unknown>;
     let withProgressFake: (
         options: vscode.ProgressOptions,
-        task: (progress: vscode.Progress<{ message: string; increment: number }>, token: vscode.CancellationToken) => Thenable<unknown>) => Thenable<unknown>;
+        task: (progress: vscode.Progress<{ message?: string; increment?: number }>, token: vscode.CancellationToken) => Thenable<unknown>) => Thenable<unknown>;
     let withProgressFakeSpy;
 
     setup(() => {
@@ -54,14 +54,14 @@ suite('Job Progress', () => {
 
         cancellationStub = new CancellationStub();
         progressStub = {
-            report: (value: { message: string, increment: number }) => void {
+            report: (value: { message?: string, increment?: number }) => void {
             }
         };
         progressStubReport = sandbox.spy(progressStub, 'report');
         withProgressFake = (
             options: vscode.ProgressOptions, 
             task: (
-                progress: vscode.Progress<{ message: string; increment: number }>, 
+                progress: vscode.Progress<{ message?: string; increment?: number }>, 
                 token: vscode.CancellationToken
             ) => Thenable<unknown>
         ) => {
@@ -92,6 +92,19 @@ suite('Job Progress', () => {
 
         // then
         expect(withProgressFakeSpy).calledOnce;
+    });
+
+    test('onJobAdded notification should use window progress with job name as title', () => {
+        JobProgress.create(stubs.client);
+
+        callOnJobAddedListenerWith(job, stubs.incoming.onJobAdded);
+
+        expect(withProgressFakeSpy).calledOnce;
+        expect(withProgressFakeSpy.firstCall.args[0]).to.include({
+            location: vscode.ProgressLocation.Window,
+            title: job.name,
+            cancellable: true
+        });
     });
 
     test('onJobAdded notification should register listeners for onJobChanged, onJobRemoved', () => {

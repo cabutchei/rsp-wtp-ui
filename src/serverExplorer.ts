@@ -92,6 +92,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     public serverOutputChannels: Map<string, OutputChannel> = new Map<string, OutputChannel>();
     public runStateEnum: Map<number, string> = new Map<number, string>();
     public publishStateEnum: Map<number, string> = new Map<number, string>();
+    private readonly publishingServers: Set<string> = new Set<string>();
     private serverAttributes: Map<string, {required: Protocol.Attributes, optional: Protocol.Attributes}> =
         new Map<string, {required: Protocol.Attributes, optional: Protocol.Attributes}>();
     private readonly viewer: TreeView< RSPState | ServerStateNode | DeployableStateNode | ModuleStateNode>;
@@ -162,6 +163,9 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public updateRSPServer(rspId: string, state: number) : void {
+        if (state === ServerState.STOPPED || state === ServerState.UNKNOWN) {
+            this.clearPublishingForRsp(rspId);
+        }
         this.RSPServersStatus.get(rspId).state.state = state;
         this.refresh(this.RSPServersStatus.get(rspId).state);
     }
@@ -288,6 +292,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     public removeServer(rspId: string, handle: Protocol.ServerHandle): void {
         this.RSPServersStatus.get(rspId).state.serverStates = this.RSPServersStatus.get(rspId).state.serverStates.
             filter(state => state.server.id !== handle.id);
+        this.publishingServers.delete(this.getPublishingKey(rspId, handle.id));
         this.refresh(this.RSPServersStatus.get(rspId).state);
         const channel: OutputChannel = this.serverOutputChannels.get(handle.id);
         this.serverOutputChannels.delete(handle.id);
@@ -1115,7 +1120,9 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             const serverState: string = (state.state === ServerState.STARTED && state.runMode === ServerState.RUN_MODE_DEBUG) ?
                 'Debugging' :
                 this.runStateEnum.get(state.state);
-            const pubState: string = this.publishStateEnum.get(state.publishState);
+            const pubState: string = this.isServerPublishing(state.rsp, handle.id)
+                ? 'Publishing...'
+                : this.publishStateEnum.get(state.publishState);
             const icon = await Utils.getIcon(state.rsp, handle.type.id);
             return { label: `${id1}`,
                 description: `(${serverState}) (${pubState})`,
@@ -1161,6 +1168,26 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
         return undefined;
     }
 
+    public markServerPublishStarted(rspId: string, server: Protocol.ServerHandle): void {
+        const serverNode = this.findServerStateNode(rspId, server.id);
+        if (!serverNode) {
+            return;
+        }
+        this.publishingServers.add(this.getPublishingKey(rspId, server.id));
+        this.refresh(serverNode);
+    }
+
+    public markServerPublishFinished(rspId: string, server: Protocol.ServerHandle): void {
+        const key = this.getPublishingKey(rspId, server.id);
+        const changed = this.publishingServers.delete(key);
+        const serverNode = this.findServerStateNode(rspId, server.id);
+        if (serverNode) {
+            this.refresh(serverNode);
+        } else if (changed) {
+            this.refresh(this.RSPServersStatus.get(rspId)?.state);
+        }
+    }
+
     public getChildren(element?:  RSPState | ServerStateNode | DeployableStateNode | ModuleStateNode):
         RSPState[] | ServerStateNode[] | DeployableStateNode[] | ModuleStateNode[] {
         if (element === undefined) {
@@ -1179,6 +1206,26 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             return this.getModulesForDeployable(element as DeployableStateNode);
         }
         return [];
+    }
+
+    private findServerStateNode(rspId: string, serverId: string): ServerStateNode | undefined {
+        return this.RSPServersStatus.get(rspId)?.state?.serverStates?.find(state => state.server.id === serverId);
+    }
+
+    private isServerPublishing(rspId: string, serverId: string): boolean {
+        return this.publishingServers.has(this.getPublishingKey(rspId, serverId));
+    }
+
+    private getPublishingKey(rspId: string, serverId: string): string {
+        return `${rspId}:${serverId}`;
+    }
+
+    private clearPublishingForRsp(rspId: string): void {
+        for (const key of Array.from(this.publishingServers)) {
+            if (key.startsWith(`${rspId}:`)) {
+                this.publishingServers.delete(key);
+            }
+        }
     }
 
     public getParent(element?:  RSPState | ServerStateNode | DeployableStateNode | ModuleStateNode):
