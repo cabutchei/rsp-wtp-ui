@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { initClient, initializeWorkspace } from './rsp/client';
+import { initClient } from './rsp/client';
 // import { DebugInfo } from './debug/debugInfo';
 import { DebugInfoProvider } from './debug/debugInfoProvider';
 import { JavaDebugSession } from './debug/javaDebugSession';
@@ -67,11 +67,7 @@ export class CommandHandler {
         const client = await initClient(serverInfo, (trace: string) => {
             this.onStdoutData(context.type.id, `[client]\n${trace}`);
         });
-        let workspaceInitialization: { dispose(): void } | undefined = undefined;
         client.onConnectionClosed(event => {
-            if (workspaceInitialization) {
-                workspaceInitialization.dispose();
-            }
             this.explorer.disposeRSPProperties(context.type.id);
             this.explorer.updateRSPServer(context.type.id, ServerState.STOPPED);
         });
@@ -82,8 +78,8 @@ export class CommandHandler {
 
         this.explorer.RSPServersStatus.set(context.type.id, rspProperties);
         await this.activate(context.type.id, client);
-        workspaceInitialization = await initializeWorkspace(client);
-        this.explorer.initRSPNode(context.type.id);
+        await this.initializeWorkspace(context.type.id, client);
+        await this.explorer.initRSPNode(context.type.id);
     }
 
     public async disconnectRSP(context?: RSPState): Promise<void> {
@@ -1379,5 +1375,18 @@ export class CommandHandler {
         client.getIncomingHandler().onServerPublishFinished(server => {
             this.explorer.markServerPublishFinished(rspId, server);
         });
+    }
+
+    private async initializeWorkspace(rspId: string, client: RSPWTPClient): Promise<void> {
+        const workspaceFolders = (vscode.workspace.workspaceFolders || []).map(folder => ({
+            uri: folder.uri.toString(),
+            name: folder.name,
+        }));
+        const result = await client.getOutgoingWTPHandler().initialize({ workspaceFolders });
+        if (!result || !StatusSeverity.isOk(result.status)) {
+            const message = result?.status?.message || 'Failed to initialize workspace.';
+            throw new Error(message);
+        }
+        this.onStdoutData(rspId, `[client]\nWorkspace initialized with ${workspaceFolders.length} folder(s).`);
     }
 }
