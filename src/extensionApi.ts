@@ -5,7 +5,7 @@
 
 'use strict';
 
-import { initClient } from './rsp/client';
+import { initClient, initializeWorkspaceWatchers } from './rsp/client';
 // import { DebugInfo } from './debug/debugInfo';
 import { DebugInfoProvider } from './debug/debugInfoProvider';
 import { JavaDebugSession } from './debug/javaDebugSession';
@@ -1387,6 +1387,9 @@ export class CommandHandler {
             const message = result?.status?.message || 'Failed to initialize workspace.';
             throw new Error(message);
         }
+        initializeWorkspaceWatchers(rspId, client, result.watchPatterns, trace => {
+            this.onStdoutData(rspId, `[client]\n${trace}`);
+        });
         this.onStdoutData(rspId, `[client]\nWorkspace initialized with ${workspaceFolders.length} folder(s).`);
     }
 }

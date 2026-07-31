@@ -22,6 +22,7 @@ import {
 } from 'vscode';
 import * as path from 'path';
 import { myContext } from './extension';
+import { disposeWorkspaceWatchers } from './rsp/client';
 
 import {
     Protocol,
@@ -912,6 +913,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             return;
         }
 
+        disposeWorkspaceWatchers(rspId);
         const rspProps = this.RSPServersStatus.get(rspId);
         if (rspProps.client) {
             rspProps.client.disconnect();
