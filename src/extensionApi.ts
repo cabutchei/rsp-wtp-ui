@@ -242,6 +242,9 @@ export class CommandHandler {
             if (!serverId) return null;
             context = this.explorer.getServerStateById(rsp.id, serverId);
         }
+        if (this.explorer.isServerRemovalPending(context.rsp, context.server.id)) {
+            return Promise.reject(`Server ${context.server.id} is already being removed.`);
+        }
         const remove = await vscode.window.showWarningMessage(
             `Remove server ${context.server.id}?`, { modal: true }, 'Yes');
         return remove && this.removeStoppedServer(context.rsp, context.server);
@@ -256,11 +259,21 @@ export class CommandHandler {
         if (!client) {
             return Promise.reject('Failed to contact the RSP server.');
         }
-        const status = await client.getOutgoingHandler().deleteServer({ id: server.id, type: server.type });
-        if (!StatusSeverity.isOk(status)) {
-            return Promise.reject(status.message);
+        if (this.explorer.isServerRemovalPending(rspId, server.id)) {
+            return Promise.reject(`Server ${server.id} is already being removed.`);
         }
-        return status;
+        this.explorer.startPendingServerRemoval(rspId, server);
+        try {
+            const status = await client.getOutgoingHandler().deleteServer({ id: server.id, type: server.type });
+            if (!StatusSeverity.isOk(status)) {
+                this.explorer.failPendingServerRemoval(rspId, server.id);
+                return Promise.reject(status.message);
+            }
+            return status;
+        } catch (error) {
+            this.explorer.failPendingServerRemoval(rspId, server.id);
+            throw error;
+        }
     }
 
     public async showServerOutput(context?: ServerStateNode): Promise<void> {
