@@ -6,6 +6,7 @@
 'use strict';
 
 import {
+    Disposable,
     Event,
     EventEmitter,
     InputBoxOptions,
@@ -35,6 +36,7 @@ import { Utils } from './utils/utils';
 import { RSPType, ServerInfo } from 'rsp-wtp-server-connector-api';
 import { IWizardPage, SEVERITY, ValidatorResponseItem, WebviewWizard, WizardDefinition,WizardPageFieldDefinition, WizardPageSectionDefinition } from '@redhat-developer/vscode-wizard';
 import { PerformFinishResponse } from '@redhat-developer/vscode-wizard/lib/IWizardWorkflowManager';
+import { currentPanels } from '@redhat-developer/vscode-wizard/lib/pageImpl';
 
 enum FilePickerType {
     FILE = 'FILE',
@@ -83,9 +85,36 @@ export interface RSPProperties {
     info: ServerInfo;
 }
 
+interface PendingServerCreation {
+    key: string;
+    rspId: string;
+    serverId: string;
+    wizardId: string;
+    wizard: WebviewWizard;
+    data: any;
+    originalTitle: string;
+    originalPageDescription: string;
+    statusMessage?: Disposable;
+}
+
+interface PendingServerRemoval {
+    key: string;
+    rspId: string;
+    serverId: string;
+    serverName: string;
+    statusMessage?: Disposable;
+}
+
 export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNode | DeployableStateNode | ModuleStateNode> {
 
     private static instance: ServerExplorer;
+    private static readonly NEW_SERVER_WIZARD_ID_PREFIX = 'NewServerWizard';
+    private static readonly SERVER_CREATION_TIMEOUT_MS = 60000;
+    private static readonly SERVER_CREATION_PENDING_MESSAGE =
+        'Creating server';
+    private static readonly SERVER_CREATION_WAITING_MESSAGE =
+        'Server creation request accepted';
+    private static readonly SERVER_REMOVAL_STATUS_PREFIX = 'Removing server';
     private _onDidChangeTreeData: EventEmitter<RSPState | ServerStateNode | DeployableStateNode | ModuleStateNode | undefined> =
         new EventEmitter<RSPState | ServerStateNode | DeployableStateNode | ModuleStateNode | undefined>();
     public readonly onDidChangeTreeData: Event<RSPState | ServerStateNode | DeployableStateNode | ModuleStateNode | undefined> =
@@ -94,6 +123,10 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     public runStateEnum: Map<number, string> = new Map<number, string>();
     public publishStateEnum: Map<number, string> = new Map<number, string>();
     private readonly publishingServers: Set<string> = new Set<string>();
+    private readonly pendingServerCreations: Map<string, PendingServerCreation> =
+        new Map<string, PendingServerCreation>();
+    private readonly pendingServerRemovals: Map<string, PendingServerRemoval> =
+        new Map<string, PendingServerRemoval>();
     private serverAttributes: Map<string, {required: Protocol.Attributes, optional: Protocol.Attributes}> =
         new Map<string, {required: Protocol.Attributes, optional: Protocol.Attributes}>();
     private readonly viewer: TreeView< RSPState | ServerStateNode | DeployableStateNode | ModuleStateNode>;
@@ -147,6 +180,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public async insertServer(rspId: string, event: Protocol.ServerHandle) : Promise<void>{
+        this.completePendingServerCreation(rspId, event?.id);
         const client: RSPWTPClient = this.getClientByRSP(rspId);
         if (client) {
             const state = await client.getOutgoingHandler().getServerState(event);
@@ -161,6 +195,193 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
                 this.selectNode({rsp: rspId, ...state } as ServerStateNode);
             }
         }
+    }
+
+    private getNewServerWizardId(rspId: string): string {
+        return `${ServerExplorer.NEW_SERVER_WIZARD_ID_PREFIX}:${rspId}`;
+    }
+
+    private getServerCreationKey(rspId: string, serverId: string): string {
+        return `${rspId}:${serverId}`;
+    }
+
+    private getServerRemovalKey(rspId: string, serverId: string): string {
+        return `${rspId}:${serverId}`;
+    }
+
+    private getPendingServerCreationForWizard(wizardId: string): PendingServerCreation | undefined {
+        for (const pending of this.pendingServerCreations.values()) {
+            if (pending.wizardId === wizardId) {
+                return pending;
+            }
+        }
+        return undefined;
+    }
+
+    private postWizardContents(wizardId: string, contents: Array<{id: string, body: string}>): void {
+        const panel = currentPanels.get(wizardId);
+        if (!panel) {
+            return;
+        }
+        panel.webview.postMessage({
+            command: 'serverCreationStateResponse',
+            contents
+        });
+    }
+
+    private createDisabledWizardControls(): string {
+        return this.createWizardButton('buttonBack', 'backPressed()', false, 'Back')
+            + this.createWizardButton('buttonNext', 'nextPressed()', false, 'Next')
+            + this.createWizardButton('buttonFinish', 'finishPressed()', false, 'Finish');
+    }
+
+    private createWizardButton(id: string, onclick: string, enabled: boolean, text: string): string {
+        return `<button type="button"
+                  class="vscode-button"
+                  id="${id}"
+                  onclick="${onclick}"
+                  ${enabled ? '' : ' disabled'}>${text}</button>
+          `;
+    }
+
+    private setPendingServerCreationUi(pending: PendingServerCreation, message: string): void {
+        this.postWizardContents(pending.wizardId, [
+            { id: 'pageDescription', body: message },
+            { id: 'wizardControls', body: this.createDisabledWizardControls() }
+        ]);
+    }
+
+    private startPendingServerCreationStatus(pending: PendingServerCreation): void {
+        this.disposePendingServerCreationStatus(pending);
+        pending.statusMessage = window.setStatusBarMessage(`Creating server ${pending.serverId}...`);
+    }
+
+    private disposePendingServerCreationStatus(pending: PendingServerCreation): void {
+        if (!pending.statusMessage) {
+            return;
+        }
+        pending.statusMessage.dispose();
+        pending.statusMessage = undefined;
+    }
+
+    private restoreWizardAfterCreationFailure(
+        pending: PendingServerCreation,
+        message: string,
+        invalidKeys: string[] = []
+    ): void {
+        this.disposePendingServerCreationStatus(pending);
+        const contents: Array<{id: string, body: string}> = [
+            {
+                id: 'pageDescription',
+                body: `${pending.originalPageDescription}<br/><br/>${message}`
+            },
+            { id: 'wizardControls', body: pending.wizard.getUpdatedWizardControls(pending.data, false) }
+        ];
+        for (const key of invalidKeys) {
+            contents.push({
+                id: `${key}Validation`,
+                body: `${key} contains an invalid value`
+            });
+        }
+        this.postWizardContents(pending.wizardId, contents);
+    }
+
+    private completePendingServerCreation(rspId: string, serverId?: string): void {
+        if (!serverId) {
+            return;
+        }
+        const key = this.getServerCreationKey(rspId, serverId);
+        const pending = this.pendingServerCreations.get(key);
+        if (!pending) {
+            return;
+        }
+        this.pendingServerCreations.delete(key);
+        this.disposePendingServerCreationStatus(pending);
+        pending.wizard.close();
+    }
+
+    private getServerCreationErrorMessage(err: unknown): string {
+        if (err instanceof Error && err.message) {
+            return err.message;
+        }
+        return `${err}`;
+    }
+
+    public isServerRemovalPending(rspId: string, serverId: string): boolean {
+        return this.pendingServerRemovals.has(this.getServerRemovalKey(rspId, serverId));
+    }
+
+    public startPendingServerRemoval(rspId: string, server: Protocol.ServerHandle): void {
+        const key = this.getServerRemovalKey(rspId, server.id);
+        const existing = this.pendingServerRemovals.get(key);
+        if (existing) {
+            return;
+        }
+        const pending: PendingServerRemoval = {
+            key,
+            rspId,
+            serverId: server.id,
+            serverName: server.id
+        };
+        pending.statusMessage = window.setStatusBarMessage(
+            `${ServerExplorer.SERVER_REMOVAL_STATUS_PREFIX} ${pending.serverName}...`
+        );
+        this.pendingServerRemovals.set(key, pending);
+    }
+
+    public failPendingServerRemoval(rspId: string, serverId: string): void {
+        this.completePendingServerRemoval(rspId, serverId);
+    }
+
+    private completePendingServerRemoval(rspId: string, serverId?: string): void {
+        if (!serverId) {
+            return;
+        }
+        const key = this.getServerRemovalKey(rspId, serverId);
+        const pending = this.pendingServerRemovals.get(key);
+        if (!pending) {
+            return;
+        }
+        this.pendingServerRemovals.delete(key);
+        if (pending.statusMessage) {
+            pending.statusMessage.dispose();
+            pending.statusMessage = undefined;
+        }
+    }
+
+    private startServerCreationFromWizard(
+        pending: PendingServerCreation,
+        serverBean: Protocol.ServerBean,
+        client: RSPWTPClient
+    ): void {
+        client.getServerCreation().createServerFromBeanAsync(
+            serverBean,
+            pending.serverId,
+            pending.data,
+            ServerExplorer.SERVER_CREATION_TIMEOUT_MS
+        ).then((resp: Protocol.CreateServerResponse) => {
+            const current = this.pendingServerCreations.get(pending.key);
+            if (!current) {
+                return;
+            }
+            if (resp?.status && (resp.status.ok || resp.status.severity === 0)) {
+                this.setPendingServerCreationUi(current, ServerExplorer.SERVER_CREATION_WAITING_MESSAGE);
+                return;
+            }
+            this.pendingServerCreations.delete(pending.key);
+            this.restoreWizardAfterCreationFailure(
+                current,
+                resp?.status?.message || 'Server creation failed.',
+                resp?.invalidKeys || []
+            );
+        }).catch((err: unknown) => {
+            const current = this.pendingServerCreations.get(pending.key);
+            if (!current) {
+                return;
+            }
+            this.pendingServerCreations.delete(pending.key);
+            this.restoreWizardAfterCreationFailure(current, this.getServerCreationErrorMessage(err));
+        });
     }
 
     public updateRSPServer(rspId: string, state: number) : void {
@@ -291,6 +512,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
     }
 
     public removeServer(rspId: string, handle: Protocol.ServerHandle): void {
+        this.completePendingServerRemoval(rspId, handle?.id);
         this.RSPServersStatus.get(rspId).state.serverStates = this.RSPServersStatus.get(rspId).state.serverStates.
             filter(state => state.server.id !== handle.id);
         this.publishingServers.delete(this.getPublishingKey(rspId, handle.id));
@@ -725,6 +947,9 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             ],
             workflowManager: {
                 canFinish(wizard:WebviewWizard, data: any): boolean {
+                    if (explorer.getPendingServerCreationForWizard(wizard.id)) {
+                        return false;
+                    }
                     if(!data.id || data.id === '') {
                         return false;
                     }
@@ -736,34 +961,42 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
                     return true;
                 },
                 async performFinish(wizard:WebviewWizard, data: any): Promise<PerformFinishResponse | null> {
-                    try {
-                        const resp: Protocol.CreateServerResponse = await explorer.createServerFullResponse(serverBean, data.id, data, client);
-                        if(resp.status.ok || resp.status.severity == 0) {
-                            return null;
-                        }
-                        const templates = [];
-                        for(const key in resp.invalidKeys) {
-                            templates.push({
-                                id: `${resp.invalidKeys[key]}Validation`,
-                                content: `${resp.invalidKeys[key]} contains an invalid value`
-                            });
-                        }
+                    const existing = explorer.getPendingServerCreationForWizard(wizard.id);
+                    if (existing) {
                         return {
                             close: false,
                             success: true,
                             returnObject: {},
-                            templates
-                        };
-                    } catch(e) {
-                        return {
-                            close: false,
-                            success: false,
-                            returnObject: {},
                             templates: [
-                                { id: 'description', content: (e) },
+                                { id: 'pageDescription', content: ServerExplorer.SERVER_CREATION_PENDING_MESSAGE },
+                                { id: 'wizardControls', content: explorer.createDisabledWizardControls() }
                             ]
                         };
                     }
+
+                    const pending: PendingServerCreation = {
+                        key: explorer.getServerCreationKey(rspId, data.id),
+                        rspId: rspId,
+                        serverId: data.id,
+                        wizardId: wizard.id,
+                        wizard: wizard,
+                        data: { ...data },
+                        originalTitle: wizard.title,
+                        originalPageDescription: wizard.getCurrentPageDescription() || ''
+                    };
+                    explorer.pendingServerCreations.set(pending.key, pending);
+                    explorer.startPendingServerCreationStatus(pending);
+                    explorer.startServerCreationFromWizard(pending, serverBean, client);
+
+                    return {
+                        close: false,
+                        success: true,
+                        returnObject: {},
+                        templates: [
+                            { id: 'pageDescription', content: ServerExplorer.SERVER_CREATION_PENDING_MESSAGE },
+                            { id: 'wizardControls', content: explorer.createDisabledWizardControls() }
+                        ]
+                    };
                 },
                 getNextPage(page:IWizardPage, data: any): IWizardPage | null {
                     return null;
@@ -774,7 +1007,7 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             }
         };
 
-        const wiz: WebviewWizard = new WebviewWizard('New Server Wizard', 'NewServerWizard',
+        const wiz: WebviewWizard = new WebviewWizard(this.getNewServerWizardId(rspId), 'NewServerWizard',
             myContext, def, initialData);
         wiz.open();
         return null;
@@ -863,14 +1096,6 @@ export class ServerExplorer implements TreeDataProvider<RSPState | ServerStateNo
             return Promise.reject(response.status.message);
         }
         return response.status;
-    }
-
-    private async createServerFullResponse(bean: Protocol.ServerBean, name: string,
-        attributes: any = {}, client: RSPWTPClient): Promise<Protocol.CreateServerResponse> {
-        if (!bean || !name) {
-            return Promise.reject('Couldn\'t create server: no type or name provided.');
-        }
-        return await client.getServerCreation().createServerFromBeanAsync(bean, name, attributes);
     }
 
     public getClientByRSP(rspId: string): RSPWTPClient {
