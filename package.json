@@ -2,7 +2,7 @@
 	"name": "wtp-rsp-ui",
 	"displayName": "WTP RSP UI",
 	"description": "A unified UI for WTP-RSP server connectors",
-	"version": "0.7.0",
+	"version": "1.0.0",
 	"license": "SEE LICENSE IN LICENSE",
 	"publisher": "cabutchei",
 	"author": "cabutchei",
@@ -52,7 +52,8 @@
 		"onCommand:wtp.server.exportEar",
 		"onCommand:wtp.server.deploymentAssembly",
 		"onView:com.github.cabutchei.rsp.serversView",
-		"onLanguage:plaintext"
+		"onLanguage:plaintext",
+		"onCustomEditor:rsp.websphereJvmPropertiesEditor"
 	],
 	"main": "./out/src/extension",
 	"contributes": {
@@ -213,6 +214,18 @@
 				}
 			]
 		},
+		"customEditors": [
+			{
+				"viewType": "rsp.websphereJvmPropertiesEditor",
+				"displayName": "WebSphere JVM Properties",
+				"selector": [
+					{
+						"filenamePattern": "*.rsp-jvm-properties.json"
+					}
+				],
+				"priority": "default"
+			}
+		],
 		"menus": {
 			"view/title": [
 				{
@@ -443,8 +456,8 @@
 					"description": "Specifies which RSP Server have to be automatically started during activation. If option is disabled, user will have to manually start the RSP Server through command palette or context menu"
 				}
 			}
-			}
-		},
+		}
+	},
 	"scripts": {
 		"vscode:package": "node ./build/package-vsix.js",
 		"vscode:prepublish": "npm run compile",
