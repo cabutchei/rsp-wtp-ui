@@ -56,7 +56,7 @@ export class WebSphereJvmPropertiesWebview {
         return panel;
     }
 
-    private static getHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
+    public static getHtml(webview: vscode.Webview, extensionUri: vscode.Uri): string {
         const mediaRoot = vscode.Uri.joinPath(extensionUri, 'media', 'websphere-jvm-properties');
         const scriptUri = vscode.Uri.joinPath(mediaRoot, 'main.js');
         const styleUri = vscode.Uri.joinPath(mediaRoot, 'styles.css');

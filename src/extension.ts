@@ -5,10 +5,12 @@
 
 'use strict';
 import { CommandHandler } from './extensionApi';
+import { WebSphereJvmPropertiesEditorProvider } from './editors/websphereJvmPropertiesEditorProvider';
 import { ServerState } from 'rsp-wtp-client';
 import { getAPI } from './api/implementation/rspProviderAPI';
 import { ServerEditorAdapter } from './serverEditorAdapter';
 import { ServerExplorer } from './serverExplorer';
+import { WebSphereJvmPropertiesEditorAdapter } from './websphereJvmPropertiesEditorAdapter';
 import * as vscode from 'vscode';
 import { RSPModel } from 'rsp-wtp-server-connector-api';
 import { IRecommendationService, RecommendationCore } from '@redhat-developer/vscode-extension-proposals/lib';
@@ -103,6 +105,7 @@ async function registerCommands(commandHandler: CommandHandler, context: vscode.
             commandHandler.downloadRuntime, commandHandler, context, 'Unable to detect any runtime: ')),
         vscode.commands.registerCommand('wtp.server.deploymentAssembly', (resource: vscode.Uri) => executeCommand(
             commandHandler.showDeploymentAssembly, commandHandler, context, resource, 'Unable to load deployment assembly: ')),
+        WebSphereJvmPropertiesEditorProvider.register(context),
         vscode.workspace.onDidSaveTextDocument(onDidSaveTextDocument),
         vscode.workspace.onDidCloseTextDocument(onDidCloseTextDocument)
     ];
@@ -127,10 +130,15 @@ function onDidSaveTextDocument(doc: vscode.TextDocument) {
         const message = err instanceof Error ? err.message : String(err);
         vscode.window.showErrorMessage(message);
     });
+    WebSphereJvmPropertiesEditorAdapter.getInstance(serversExplorer).onDidSaveTextDocument(doc).catch(err => {
+        const message = err instanceof Error ? err.message : String(err);
+        vscode.window.showErrorMessage(message);
+    });
 }
 
 function onDidCloseTextDocument(doc: vscode.TextDocument) {
     ServerEditorAdapter.getInstance(serversExplorer).onDidCloseTextDocument(doc);
+    WebSphereJvmPropertiesEditorAdapter.getInstance(serversExplorer).onDidCloseTextDocument(doc);
 }
 
 export function executeCommandAndLog(_name: string, command: (...args: any[]) => Promise<any>, thisArg: any, ...params: any[]) {

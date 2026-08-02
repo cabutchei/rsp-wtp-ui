@@ -19,6 +19,7 @@ import { WorkflowResponseStrategy, WorkflowResponseStrategyManager } from './wor
 import { JAVA_DEBUG_EXTENSION } from './constants';
 import { IRecommendationService, Level, RecommendationCore} from '@redhat-developer/vscode-extension-proposals/lib';
 import { myContext } from './extension';
+import { WEBSPHERE_SERVER_ACTION_CONTEXT_KEY } from './websphereJvmPropertiesEditorAdapter';
 import * as path from 'path';
 import * as fs from 'fs';
 
@@ -608,12 +609,19 @@ export class CommandHandler {
     }
 
     private async executeServerAction(action: ServerActionItem, context: ServerStateNode, client: RSPWTPClient): Promise<Protocol.Status> {
-        const workflowMap = {};
+        const workflowMap = {
+            [WEBSPHERE_SERVER_ACTION_CONTEXT_KEY]: {
+                actionId: action.id,
+                rspId: context.rsp,
+                serverId: context.server.id,
+            }
+        };
         const status1 = await this.handleWorkflow(action.actionWorkflow, workflowMap);
         if(!status1) {
             // Only way status1 is undefined is if the user canceled an input, and thus canceled the request
             return;
         }
+        delete workflowMap[WEBSPHERE_SERVER_ACTION_CONTEXT_KEY];
         const actionRequest: Protocol.ServerActionRequest = {
             actionId: action.id,
             data: workflowMap,
